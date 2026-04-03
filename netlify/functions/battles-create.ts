@@ -6,16 +6,17 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
 }
 
+const INTERVAL_MS: Record<string, number> = {
+  '1h': 3600_000,
+  '6h': 6 * 3600_000,
+  '24h': 24 * 3600_000,
+  '7d': 7 * 24 * 3600_000,
+  '30d': 30 * 24 * 3600_000,
+};
+
 function getEndDate(startDate: string, interval: string): string {
   const start = new Date(startDate);
-  switch (interval) {
-    case '1h': return new Date(start.getTime() + 60 * 60 * 1000).toISOString();
-    case '6h': return new Date(start.getTime() + 6 * 60 * 60 * 1000).toISOString();
-    case '24h': return new Date(start.getTime() + 24 * 60 * 60 * 1000).toISOString();
-    case '7d': return new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    case '30d': return new Date(start.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    default: return new Date(start.getTime() + 24 * 60 * 60 * 1000).toISOString();
-  }
+  return new Date(start.getTime() + (INTERVAL_MS[interval] || 24 * 3600_000)).toISOString();
 }
 
 async function fetchAvatar(username: string): Promise<string> {
@@ -44,8 +45,11 @@ export default async function handler(request: Request, _context: Context) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
     }
 
-    const now = new Date().toISOString();
+    const now = new Date();
     const id = generateId();
+    const lookback = INTERVAL_MS[interval] || 24 * 3600_000;
+    const startDate = new Date(now.getTime() - lookback).toISOString();
+    const nowISO = now.toISOString();
 
     const participantList = await Promise.all(
       participants.map(async (username: string) => {
@@ -65,14 +69,14 @@ export default async function handler(request: Request, _context: Context) {
       name,
       password: password || null,
       interval,
-      startDate: now,
-      endDate: getEndDate(now, interval),
+      startDate,
+      endDate: getEndDate(nowISO, interval),
       status: 'active',
       participants: participantList,
       votes: {},
       maxParticipants: maxParticipants || 10,
-      lastRefresh: now,
-      createdAt: now,
+      lastRefresh: startDate,
+      createdAt: nowISO,
     };
 
     await saveBattle(battle);

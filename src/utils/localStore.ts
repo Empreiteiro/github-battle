@@ -8,16 +8,17 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
 }
 
+const INTERVAL_MS: Record<string, number> = {
+  '1h': 3600_000,
+  '6h': 6 * 3600_000,
+  '24h': 24 * 3600_000,
+  '7d': 7 * 24 * 3600_000,
+  '30d': 30 * 24 * 3600_000,
+};
+
 function getEndDate(startDate: string, interval: string): string {
   const start = new Date(startDate);
-  const ms: Record<string, number> = {
-    '1h': 3600_000,
-    '6h': 6 * 3600_000,
-    '24h': 24 * 3600_000,
-    '7d': 7 * 24 * 3600_000,
-    '30d': 30 * 24 * 3600_000,
-  };
-  return new Date(start.getTime() + (ms[interval] || 24 * 3600_000)).toISOString();
+  return new Date(start.getTime() + (INTERVAL_MS[interval] || 24 * 3600_000)).toISOString();
 }
 
 function readAll(): Record<string, Battle> {
@@ -54,8 +55,11 @@ export const localStore = {
   },
 
   async createBattle(data: CreateBattleRequest): Promise<Battle> {
-    const now = new Date().toISOString();
+    const now = new Date();
     const id = generateId();
+    // startDate looks back by the interval so the battle captures existing activity
+    const lookback = INTERVAL_MS[data.interval] || 24 * 3600_000;
+    const startDate = new Date(now.getTime() - lookback).toISOString();
 
     const participants = await Promise.all(
       data.participants.filter(u => u.trim()).map(async username => {
@@ -77,19 +81,20 @@ export const localStore = {
       }),
     );
 
+    const nowISO = now.toISOString();
     const battle: Battle = {
       id,
       name: data.name,
       hasPassword: !!data.password,
       interval: data.interval,
-      startDate: now,
-      endDate: getEndDate(now, data.interval),
+      startDate,
+      endDate: getEndDate(nowISO, data.interval),
       status: 'active',
       participants,
       votes: {},
       maxParticipants: data.maxParticipants || 10,
-      lastRefresh: now,
-      createdAt: now,
+      lastRefresh: startDate, // force immediate refresh on first load
+      createdAt: nowISO,
     };
 
     save(battle);
@@ -142,9 +147,10 @@ export const localStore = {
       battle.status = 'finished';
     }
 
-    // Refresh if 60+ seconds since last
+    // Refresh if 60+ seconds since last, or if scores have never been fetched
     const timeSinceRefresh = Date.now() - new Date(battle.lastRefresh).getTime();
-    if (timeSinceRefresh > 60_000 && battle.status === 'active') {
+    const neverFetched = battle.participants.every(p => p.score === 0 && p.stats.commits === 0);
+    if ((timeSinceRefresh > 60_000 || neverFetched) && battle.status === 'active') {
       const statsPromises = battle.participants.map(p =>
         fetchGitHubEvents(p.username, battle.startDate),
       );

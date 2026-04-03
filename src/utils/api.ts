@@ -10,7 +10,9 @@ let backendProbe: Promise<boolean> | null = null;
 async function checkBackend(): Promise<boolean> {
   try {
     const res = await fetch(`${BASE}/battles-list`, { method: 'GET' });
-    return res.ok || res.status < 500;
+    const contentType = res.headers.get('content-type') || '';
+    // Backend must respond with JSON — Vite SPA fallback returns text/html
+    return res.ok && contentType.includes('application/json');
   } catch {
     return false;
   }
