@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { BattleInterval } from '../types';
-import { INTERVAL_LABELS } from '../types';
+import type { BattleInterval, ScoringConfig, ScoringKey } from '../types';
+import { INTERVAL_LABELS, DEFAULT_SCORING, SCORING_LABELS } from '../types';
 import { api } from '../utils/api';
 
 function toLocalDatetime(date: Date): string {
@@ -18,8 +18,23 @@ export default function CreateBattle() {
   const [customEnd, setCustomEnd] = useState(toLocalDatetime(new Date(Date.now() + 24 * 3600_000)));
   const [participants, setParticipants] = useState(['', '']);
   const [maxParticipants, setMaxParticipants] = useState(10);
+  const [scoring, setScoring] = useState<ScoringConfig>(structuredClone(DEFAULT_SCORING));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const toggleScoringType = (key: ScoringKey) => {
+    setScoring(prev => ({
+      ...prev,
+      enabled: { ...prev.enabled, [key]: !prev.enabled[key] },
+    }));
+  };
+
+  const updatePoints = (key: ScoringKey, value: number) => {
+    setScoring(prev => ({
+      ...prev,
+      points: { ...prev.points, [key]: Math.max(0, value) },
+    }));
+  };
 
   const presets = Object.keys(INTERVAL_LABELS) as BattleInterval[];
 
@@ -85,6 +100,7 @@ export default function CreateBattle() {
         customEnd: new Date(customEnd).toISOString(),
         participants: validParticipants,
         maxParticipants,
+        scoring,
       });
       navigate(`/battle/${battle.id}`);
     } catch (err) {
@@ -166,6 +182,48 @@ export default function CreateBattle() {
 
           <p className="text-[10px] text-dark-muted mt-2">
             GitHub activity within this window is scored. Presets auto-fill the dates. Past activity counts!
+          </p>
+        </div>
+
+        {/* Scoring Config */}
+        <div className="pixel-border bg-dark-card p-4 rounded-lg">
+          <label className="pixel-font text-[10px] text-accent-blue block mb-3">
+            CONTRIBUTION TYPES &amp; POINTS
+          </label>
+          <div className="space-y-2">
+            {(Object.keys(SCORING_LABELS) as ScoringKey[]).map(key => (
+              <div key={key} className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => toggleScoringType(key)}
+                  className={`w-5 h-5 rounded border flex-shrink-0 flex items-center justify-center text-xs cursor-pointer transition-colors ${
+                    scoring.enabled[key]
+                      ? 'bg-accent-green/30 border-accent-green text-accent-green'
+                      : 'bg-dark-bg border-dark-border text-dark-muted'
+                  }`}
+                >
+                  {scoring.enabled[key] ? '\u2713' : ''}
+                </button>
+                <span className={`text-sm flex-1 ${scoring.enabled[key] ? 'text-dark-text' : 'text-dark-muted line-through'}`}>
+                  {SCORING_LABELS[key]}
+                </span>
+                <div className="flex items-center gap-1">
+                  <input
+                    type="number"
+                    value={scoring.points[key]}
+                    onChange={e => updatePoints(key, parseInt(e.target.value) || 0)}
+                    disabled={!scoring.enabled[key]}
+                    min={0}
+                    max={100}
+                    className="w-14 bg-dark-bg border border-dark-border text-dark-text p-1 rounded text-center text-xs focus:border-accent-blue outline-none disabled:opacity-40"
+                  />
+                  <span className="text-[10px] text-dark-muted">pts</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="text-[10px] text-dark-muted mt-2">
+            Toggle which GitHub activities count and customize point values per type.
           </p>
         </div>
 

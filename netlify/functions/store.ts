@@ -24,6 +24,10 @@ export interface StoredBattle {
   }[];
   votes: Record<string, number>;
   maxParticipants: number;
+  scoring?: {
+    enabled: Record<string, boolean>;
+    points: Record<string, number>;
+  };
   lastRefresh: string;
   createdAt: string;
 }

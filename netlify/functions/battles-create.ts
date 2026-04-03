@@ -39,7 +39,7 @@ export default async function handler(request: Request, _context: Context) {
 
   try {
     const body = await request.json();
-    const { name, password, interval, participants, maxParticipants, customStart, customEnd } = body;
+    const { name, password, interval, participants, maxParticipants, customStart, customEnd, scoring } = body;
 
     if (!name || !interval || !participants || !Array.isArray(participants) || participants.length < 1) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
@@ -84,6 +84,7 @@ export default async function handler(request: Request, _context: Context) {
       participants: participantList,
       votes: {},
       maxParticipants: maxParticipants || 10,
+      scoring: scoring || undefined,
       lastRefresh: startDate,
       createdAt: nowISO,
     };

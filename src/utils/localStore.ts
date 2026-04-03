@@ -1,4 +1,5 @@
 import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest } from '../types';
+import { DEFAULT_SCORING } from '../types';
 import { fetchGitHubEvents } from './github';
 import { calculateScore, calculateHP } from './scoring';
 
@@ -101,6 +102,7 @@ export const localStore = {
       participants,
       votes: {},
       maxParticipants: data.maxParticipants || 10,
+      scoring: data.scoring || DEFAULT_SCORING,
       lastRefresh: startDate, // force immediate refresh on first load
       createdAt: now.toISOString(),
     };
@@ -167,7 +169,7 @@ export const localStore = {
       let maxScore = 0;
       for (let i = 0; i < battle.participants.length; i++) {
         battle.participants[i].stats = allStats[i];
-        battle.participants[i].score = calculateScore(allStats[i]);
+        battle.participants[i].score = calculateScore(allStats[i], battle.scoring);
         if (battle.participants[i].score > maxScore) {
           maxScore = battle.participants[i].score;
         }

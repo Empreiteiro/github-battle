@@ -1,12 +1,24 @@
-import type { Participant } from '../types';
-import { SCORING } from '../types';
+import type { Participant, ScoringConfig, ScoringKey } from '../types';
+import { DEFAULT_SCORING, SCORING_LABELS } from '../types';
 
 interface Props {
   participants: Participant[];
+  scoring?: ScoringConfig;
 }
 
-export default function ParticipantList({ participants }: Props) {
+const STAT_MAP: Record<ScoringKey, keyof Participant['stats']> = {
+  commit: 'commits',
+  pr: 'pullRequests',
+  pr_merged: 'pullRequestsMerged',
+  issue: 'issues',
+  review: 'reviews',
+  comment: 'comments',
+};
+
+export default function ParticipantList({ participants, scoring }: Props) {
+  const sc = scoring || DEFAULT_SCORING;
   const sorted = [...participants].sort((a, b) => b.score - a.score);
+  const activeKeys = (Object.keys(STAT_MAP) as ScoringKey[]).filter(k => sc.enabled[k]);
 
   return (
     <div className="pixel-border bg-dark-card p-4 rounded-lg">
@@ -31,12 +43,14 @@ export default function ParticipantList({ participants }: Props) {
             </div>
 
             <div className="grid grid-cols-3 gap-1 text-[10px]">
-              <StatItem label="Commits" value={p.stats.commits} points={SCORING.commit} />
-              <StatItem label="PRs" value={p.stats.pullRequests} points={SCORING.pr} />
-              <StatItem label="Merged" value={p.stats.pullRequestsMerged} points={SCORING.pr_merged} />
-              <StatItem label="Issues" value={p.stats.issues} points={SCORING.issue} />
-              <StatItem label="Reviews" value={p.stats.reviews} points={SCORING.review} />
-              <StatItem label="Comments" value={p.stats.comments} points={SCORING.comment} />
+              {activeKeys.map(key => (
+                <StatItem
+                  key={key}
+                  label={SCORING_LABELS[key]}
+                  value={p.stats[STAT_MAP[key]]}
+                  points={sc.points[key]}
+                />
+              ))}
             </div>
           </div>
         ))}

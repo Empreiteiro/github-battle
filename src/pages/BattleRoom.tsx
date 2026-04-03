@@ -144,7 +144,7 @@ export default function BattleRoom() {
 
           {/* Participant details on mobile */}
           <div className="lg:hidden">
-            <ParticipantList participants={battle.participants} />
+            <ParticipantList participants={battle.participants} scoring={battle.scoring} />
           </div>
         </div>
 
@@ -152,7 +152,7 @@ export default function BattleRoom() {
         <div className="space-y-6">
           <VotePanel battle={battle} onVote={vote} />
           <div className="hidden lg:block">
-            <ParticipantList participants={battle.participants} />
+            <ParticipantList participants={battle.participants} scoring={battle.scoring} />
           </div>
 
           {/* Battle Info */}

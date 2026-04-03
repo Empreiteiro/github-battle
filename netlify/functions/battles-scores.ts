@@ -109,21 +109,24 @@ export default async function handler(request: Request, _context: Context) {
       );
       const allStats = await Promise.all(statsPromises);
 
-      // Update participants
+      // Update participants using battle's scoring config
+      const sc = battle.scoring || {
+        enabled: { commit: true, pr: true, pr_merged: true, issue: true, review: true, comment: true },
+        points: { commit: 5, pr: 10, pr_merged: 15, issue: 3, review: 8, comment: 1 },
+      };
       let maxScore = 0;
       for (let i = 0; i < battle.participants.length; i++) {
         const s = allStats[i];
         battle.participants[i].stats = s;
-        battle.participants[i].score =
-          s.commits * SCORING.commits +
-          s.pullRequests * SCORING.pullRequests +
-          s.pullRequestsMerged * SCORING.pullRequestsMerged +
-          s.issues * SCORING.issues +
-          s.reviews * SCORING.reviews +
-          s.comments * SCORING.comments;
-        if (battle.participants[i].score > maxScore) {
-          maxScore = battle.participants[i].score;
-        }
+        let score = 0;
+        if (sc.enabled.commit) score += s.commits * sc.points.commit;
+        if (sc.enabled.pr) score += s.pullRequests * sc.points.pr;
+        if (sc.enabled.pr_merged) score += s.pullRequestsMerged * sc.points.pr_merged;
+        if (sc.enabled.issue) score += s.issues * sc.points.issue;
+        if (sc.enabled.review) score += s.reviews * sc.points.review;
+        if (sc.enabled.comment) score += s.comments * sc.points.comment;
+        battle.participants[i].score = score;
+        if (score > maxScore) maxScore = score;
       }
 
       // Calculate HP based on relative scores

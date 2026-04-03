@@ -1,15 +1,16 @@
-import type { ParticipantStats } from '../types';
-import { SCORING } from '../types';
+import type { ParticipantStats, ScoringConfig } from '../types';
+import { DEFAULT_SCORING } from '../types';
 
-export function calculateScore(stats: ParticipantStats): number {
-  return (
-    stats.commits * SCORING.commit +
-    stats.pullRequests * SCORING.pr +
-    stats.pullRequestsMerged * SCORING.pr_merged +
-    stats.issues * SCORING.issue +
-    stats.reviews * SCORING.review +
-    stats.comments * SCORING.comment
-  );
+export function calculateScore(stats: ParticipantStats, config?: ScoringConfig): number {
+  const c = config || DEFAULT_SCORING;
+  let score = 0;
+  if (c.enabled.commit) score += stats.commits * c.points.commit;
+  if (c.enabled.pr) score += stats.pullRequests * c.points.pr;
+  if (c.enabled.pr_merged) score += stats.pullRequestsMerged * c.points.pr_merged;
+  if (c.enabled.issue) score += stats.issues * c.points.issue;
+  if (c.enabled.review) score += stats.reviews * c.points.review;
+  if (c.enabled.comment) score += stats.comments * c.points.comment;
+  return score;
 }
 
 export function calculateHP(myScore: number, maxScore: number): number {
