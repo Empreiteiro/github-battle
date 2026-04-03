@@ -53,18 +53,26 @@ export default function BattleCard({ battle }: Props) {
       </div>
 
       {battle.participants.length >= 2 && (
-        <div className="mt-3 flex items-center gap-2">
-          <div className="flex-1 text-right">
-            <span className="pixel-font text-[10px] text-accent-green">
-              {battle.participants[0]?.username}
+        <div className="mt-3 text-center">
+          {battle.participants.length === 2 ? (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 text-right">
+                <span className="pixel-font text-[10px] text-accent-green">
+                  {battle.participants[0]?.username}
+                </span>
+              </div>
+              <span className="pixel-font text-[10px] text-accent-red">VS</span>
+              <div className="flex-1">
+                <span className="pixel-font text-[10px] text-accent-purple">
+                  {battle.participants[1]?.username}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <span className="pixel-font text-[10px] text-dark-muted">
+              {battle.participants.length}-player battle
             </span>
-          </div>
-          <span className="pixel-font text-[10px] text-accent-red">VS</span>
-          <div className="flex-1">
-            <span className="pixel-font text-[10px] text-accent-purple">
-              {battle.participants[1]?.username}
-            </span>
-          </div>
+          )}
         </div>
       )}
     </Link>

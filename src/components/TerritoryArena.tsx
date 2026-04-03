@@ -141,7 +141,9 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
     if (!parent) return;
 
     const containerWidth = parent.clientWidth;
-    const gap = 3;
+    // Larger gap and cells on desktop, compact on mobile
+    const isDesktop = containerWidth > 640;
+    const gap = isDesktop ? 4 : 3;
     const cellSize = Math.max(6, Math.floor((containerWidth - gap * (COLS + 1)) / COLS));
     const totalWidth = COLS * (cellSize + gap) + gap;
     const totalHeight = ROWS * (cellSize + gap) + gap;

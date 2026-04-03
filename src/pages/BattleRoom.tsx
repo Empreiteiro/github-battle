@@ -136,24 +136,21 @@ export default function BattleRoom() {
         <p className="text-accent-red text-xs mb-4">{joinError}</p>
       )}
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Arena - takes 2 columns */}
-        <div className="lg:col-span-2 space-y-6">
-          <TerritoryArena battle={battle} prevBattle={prevBattle} />
+      {/* Territory Arena — full width */}
+      <div className="mb-6">
+        <TerritoryArena battle={battle} prevBattle={prevBattle} />
+      </div>
 
-          {/* Participant details on mobile */}
-          <div className="lg:hidden">
-            <ParticipantList participants={battle.participants} scoring={battle.scoring} />
-          </div>
+      {/* Details Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Scoreboard — takes 2 columns */}
+        <div className="lg:col-span-2">
+          <ParticipantList participants={battle.participants} scoring={battle.scoring} />
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
           <VotePanel battle={battle} onVote={vote} />
-          <div className="hidden lg:block">
-            <ParticipantList participants={battle.participants} scoring={battle.scoring} />
-          </div>
 
           {/* Battle Info */}
           <div className="pixel-border bg-dark-card p-4 rounded-lg">
