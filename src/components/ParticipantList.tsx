@@ -22,7 +22,7 @@ export default function ParticipantList({ participants, scoring }: Props) {
   const activeKeys = (Object.keys(STAT_MAP) as ScoringKey[]).filter(k => sc.enabled[k]);
 
   return (
-    <div className="pixel-border bg-dark-card p-4 rounded-lg">
+    <div className="pixel-border bg-dark-card p-4 rounded-lg flex-1">
       <h3 className="pixel-font text-xs text-accent-blue mb-4 text-center">
         &#128200; SCOREBOARD
       </h3>
