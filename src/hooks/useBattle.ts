@@ -6,9 +6,11 @@ export function useBattle(id: string | undefined) {
   const [battle, setBattle] = useState<Battle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const fetchingRef = useRef(false);
 
   const fetchBattle = useCallback(async () => {
-    if (!id) return;
+    if (!id || fetchingRef.current) return;
+    fetchingRef.current = true;
     try {
       const data = await api.refreshScores(id);
       setBattle(data);
@@ -16,6 +18,7 @@ export function useBattle(id: string | undefined) {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch battle');
     } finally {
+      fetchingRef.current = false;
       setLoading(false);
     }
   }, [id]);

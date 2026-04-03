@@ -4,8 +4,33 @@ import { localStore } from './localStore';
 const BASE = '/api';
 let useLocal = false;
 
+// Single probe to check if backend is available, shared across all callers
+let backendProbe: Promise<boolean> | null = null;
+
+async function checkBackend(): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE}/battles-list`, { method: 'GET' });
+    return res.ok || res.status < 500;
+  } catch {
+    return false;
+  }
+}
+
+function ensureBackendProbe(): Promise<boolean> {
+  if (useLocal) return Promise.resolve(false);
+  if (!backendProbe) {
+    backendProbe = checkBackend().then(available => {
+      if (!available) {
+        useLocal = true;
+        console.info('[GitHub Battle] Backend unavailable, using local mode (localStorage)');
+      }
+      return available;
+    });
+  }
+  return backendProbe;
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  if (useLocal) throw new Error('Using local mode');
   const res = await fetch(`${BASE}${url}`, {
     headers: { 'Content-Type': 'application/json' },
     ...options,
@@ -18,14 +43,18 @@ async function request<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 async function withFallback<T>(remoteFn: () => Promise<T>, localFn: () => Promise<T>): Promise<T> {
-  if (useLocal) return localFn();
+  const available = await ensureBackendProbe();
+  if (!available) return localFn();
   try {
     return await remoteFn();
   } catch {
     useLocal = true;
-    console.info('[GitHub Battle] Backend unavailable, using local mode (localStorage)');
     return localFn();
   }
+}
+
+export function isLocalMode() {
+  return useLocal;
 }
 
 export const api = {
