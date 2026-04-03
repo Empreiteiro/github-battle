@@ -39,7 +39,7 @@ export default async function handler(request: Request, _context: Context) {
 
   try {
     const body = await request.json();
-    const { name, password, interval, participants, maxParticipants } = body;
+    const { name, password, interval, participants, maxParticipants, customStart, customEnd } = body;
 
     if (!name || !interval || !participants || !Array.isArray(participants) || participants.length < 1) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
@@ -47,9 +47,18 @@ export default async function handler(request: Request, _context: Context) {
 
     const now = new Date();
     const id = generateId();
-    const lookback = INTERVAL_MS[interval] || 24 * 3600_000;
-    const startDate = new Date(now.getTime() - lookback).toISOString();
     const nowISO = now.toISOString();
+
+    let startDate: string;
+    let endDate: string;
+    if (customStart && customEnd) {
+      startDate = customStart;
+      endDate = customEnd;
+    } else {
+      const lookback = INTERVAL_MS[interval] || 24 * 3600_000;
+      startDate = new Date(now.getTime() - lookback).toISOString();
+      endDate = getEndDate(nowISO, interval);
+    }
 
     const participantList = await Promise.all(
       participants.map(async (username: string) => {
@@ -70,7 +79,7 @@ export default async function handler(request: Request, _context: Context) {
       password: password || null,
       interval,
       startDate,
-      endDate: getEndDate(nowISO, interval),
+      endDate,
       status: 'active',
       participants: participantList,
       votes: {},

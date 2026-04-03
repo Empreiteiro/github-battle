@@ -57,9 +57,18 @@ export const localStore = {
   async createBattle(data: CreateBattleRequest): Promise<Battle> {
     const now = new Date();
     const id = generateId();
-    // startDate looks back by the interval so the battle captures existing activity
-    const lookback = INTERVAL_MS[data.interval] || 24 * 3600_000;
-    const startDate = new Date(now.getTime() - lookback).toISOString();
+
+    // Use custom dates if provided, otherwise calculate from interval
+    let startDate: string;
+    let endDate: string;
+    if (data.customStart && data.customEnd) {
+      startDate = data.customStart;
+      endDate = data.customEnd;
+    } else {
+      const lookback = INTERVAL_MS[data.interval] || 24 * 3600_000;
+      startDate = new Date(now.getTime() - lookback).toISOString();
+      endDate = getEndDate(now.toISOString(), data.interval);
+    }
 
     const participants = await Promise.all(
       data.participants.filter(u => u.trim()).map(async username => {
@@ -81,20 +90,19 @@ export const localStore = {
       }),
     );
 
-    const nowISO = now.toISOString();
     const battle: Battle = {
       id,
       name: data.name,
       hasPassword: !!data.password,
       interval: data.interval,
       startDate,
-      endDate: getEndDate(nowISO, data.interval),
+      endDate,
       status: 'active',
       participants,
       votes: {},
       maxParticipants: data.maxParticipants || 10,
       lastRefresh: startDate, // force immediate refresh on first load
-      createdAt: nowISO,
+      createdAt: now.toISOString(),
     };
 
     save(battle);

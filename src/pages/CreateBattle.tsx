@@ -4,15 +4,40 @@ import type { BattleInterval } from '../types';
 import { INTERVAL_LABELS } from '../types';
 import { api } from '../utils/api';
 
+function toLocalDatetime(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 export default function CreateBattle() {
   const navigate = useNavigate();
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [interval, setInterval] = useState<BattleInterval>('24h');
+  const [customStart, setCustomStart] = useState(toLocalDatetime(new Date(Date.now() - 24 * 3600_000)));
+  const [customEnd, setCustomEnd] = useState(toLocalDatetime(new Date(Date.now() + 24 * 3600_000)));
   const [participants, setParticipants] = useState(['', '']);
   const [maxParticipants, setMaxParticipants] = useState(10);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const presets = Object.keys(INTERVAL_LABELS) as BattleInterval[];
+
+  const handleIntervalSelect = (key: BattleInterval) => {
+    setInterval(key);
+    if (key !== 'custom') {
+      const ms: Record<string, number> = {
+        '1h': 3600_000,
+        '6h': 6 * 3600_000,
+        '24h': 24 * 3600_000,
+        '7d': 7 * 24 * 3600_000,
+        '30d': 30 * 24 * 3600_000,
+      };
+      const lookback = ms[key] || 24 * 3600_000;
+      setCustomStart(toLocalDatetime(new Date(Date.now() - lookback)));
+      setCustomEnd(toLocalDatetime(new Date(Date.now() + lookback)));
+    }
+  };
 
   const addParticipant = () => {
     if (participants.length < maxParticipants) {
@@ -45,6 +70,10 @@ export default function CreateBattle() {
       setError('Add at least 2 participants');
       return;
     }
+    if (new Date(customStart) >= new Date(customEnd)) {
+      setError('Start date must be before end date');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -52,6 +81,8 @@ export default function CreateBattle() {
         name: name.trim(),
         password: password || undefined,
         interval,
+        customStart: new Date(customStart).toISOString(),
+        customEnd: new Date(customEnd).toISOString(),
         participants: validParticipants,
         maxParticipants,
       });
@@ -85,17 +116,17 @@ export default function CreateBattle() {
           />
         </div>
 
-        {/* Interval */}
+        {/* Interval presets */}
         <div className="pixel-border bg-dark-card p-4 rounded-lg">
           <label className="pixel-font text-[10px] text-accent-blue block mb-2">
-            BATTLE DURATION
+            SCORING WINDOW
           </label>
-          <div className="grid grid-cols-5 gap-2">
-            {(Object.keys(INTERVAL_LABELS) as BattleInterval[]).map(key => (
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+            {presets.map(key => (
               <button
                 key={key}
                 type="button"
-                onClick={() => setInterval(key)}
+                onClick={() => handleIntervalSelect(key)}
                 className={`pixel-font text-[10px] py-2 px-1 rounded border transition-colors cursor-pointer ${
                   interval === key
                     ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/50'
@@ -106,6 +137,36 @@ export default function CreateBattle() {
               </button>
             ))}
           </div>
+
+          {/* Date/time pickers — always visible */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="pixel-font text-[10px] text-accent-green block mb-1">
+                SCORING FROM
+              </label>
+              <input
+                type="datetime-local"
+                value={customStart}
+                onChange={e => { setCustomStart(e.target.value); setInterval('custom'); }}
+                className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-green outline-none text-sm"
+              />
+            </div>
+            <div>
+              <label className="pixel-font text-[10px] text-accent-orange block mb-1">
+                SCORING UNTIL
+              </label>
+              <input
+                type="datetime-local"
+                value={customEnd}
+                onChange={e => { setCustomEnd(e.target.value); setInterval('custom'); }}
+                className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-orange outline-none text-sm"
+              />
+            </div>
+          </div>
+
+          <p className="text-[10px] text-dark-muted mt-2">
+            GitHub activity within this window is scored. Presets auto-fill the dates. Past activity counts!
+          </p>
         </div>
 
         {/* Participants */}

@@ -15,7 +15,7 @@ export interface Participant {
   hp: number; // 0-100, visual representation
 }
 
-export type BattleInterval = '1h' | '6h' | '24h' | '7d' | '30d';
+export type BattleInterval = '1h' | '6h' | '24h' | '7d' | '30d' | 'custom';
 export type BattleStatus = 'waiting' | 'active' | 'finished';
 
 export interface Battle {
@@ -37,6 +37,8 @@ export interface CreateBattleRequest {
   name: string;
   password?: string;
   interval: BattleInterval;
+  customStart?: string; // ISO string for custom interval
+  customEnd?: string;   // ISO string for custom interval
   participants: string[];
   maxParticipants: number;
 }
@@ -65,6 +67,7 @@ export const INTERVAL_LABELS: Record<BattleInterval, string> = {
   '24h': '24 Hours',
   '7d': '7 Days',
   '30d': '30 Days',
+  'custom': 'Custom',
 };
 
 export const SCORING: Record<string, number> = {
