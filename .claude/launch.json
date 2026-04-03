@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "github-battle",
+      "runtimeExecutable": "/opt/homebrew/bin/node",
+      "runtimeArgs": ["./node_modules/.bin/vite", "--port", "5173"],
+      "port": 5173,
+      "env": {
+        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+      }
+    }
+  ]
+}
