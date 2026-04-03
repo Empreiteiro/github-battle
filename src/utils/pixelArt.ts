@@ -120,23 +120,45 @@ export function drawCharacter(
   }
 }
 
-// Fixed palette of 10 high-contrast colors for territory
+// 30 high-contrast colors for territory — supports many competitors without repeats
 const TERRITORY_PALETTE = [
   '#39d353', // green
   '#58a6ff', // blue
   '#bc8cff', // purple
   '#f85149', // red
-  '#d29922', // orange
+  '#d29922', // amber
   '#e3b341', // yellow
+  '#f778ba', // pink
+  '#79c0ff', // sky blue
   '#3fb950', // lime
-  '#79c0ff', // light blue
-  '#d2a8ff', // lavender
   '#ff7b72', // salmon
+  '#a5d6ff', // ice blue
+  '#ffa657', // orange
+  '#d2a8ff', // lavender
+  '#56d364', // bright green
+  '#ff9bce', // hot pink
+  '#7ee787', // mint
+  '#ffc680', // peach
+  '#b392f0', // violet
+  '#fddf68', // gold
+  '#7dc7e0', // teal
+  '#e06c75', // rose
+  '#98c379', // olive
+  '#c678dd', // magenta
+  '#61afef', // cornflower
+  '#d19a66', // tan
+  '#56b6c2', // cyan
+  '#e5c07b', // sand
+  '#be5046', // brick
+  '#88c0d0', // frost
+  '#a3be8c', // sage
 ];
 
 export function getParticipantColor(index: number): string {
   return TERRITORY_PALETTE[index % TERRITORY_PALETTE.length];
 }
+
+export const TOTAL_COLORS = TERRITORY_PALETTE.length;
 
 // Returns 4 intensity levels for a base hex color (like GitHub's contribution levels)
 export function getIntensityLevels(hex: string): string[] {
