@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --color-dark-bg: #0d1117;
+  --color-dark-card: #161b22;
+  --color-dark-border: #30363d;
+  --color-dark-text: #c9d1d9;
+  --color-dark-muted: #8b949e;
+  --color-accent-green: #39d353;
+  --color-accent-blue: #58a6ff;
+  --color-accent-purple: #bc8cff;
+  --color-accent-red: #f85149;
+  --color-accent-orange: #d29922;
+  --color-accent-yellow: #e3b341;
+  --font-family-pixel: 'Press Start 2P', monospace;
+}
+
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK3nVivM.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-dark-bg);
+  color: var(--color-dark-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.pixel-font {
+  font-family: var(--font-family-pixel);
+}
+
+.pixel-border {
+  border: 4px solid var(--color-dark-border);
+  box-shadow:
+    inset -4px -4px 0px 0px #21262d,
+    inset 4px 4px 0px 0px #484f58;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes flash-red {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(2) sepia(1) saturate(5) hue-rotate(-10deg); }
+}
+
+@keyframes float-up {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-60px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 5px var(--color-accent-green); }
+  50% { box-shadow: 0 0 20px var(--color-accent-green), 0 0 40px var(--color-accent-green); }
+}
+
+.animate-shake { animation: shake 0.3s ease-in-out; }
+.animate-flash-red { animation: flash-red 0.3s ease-in-out; }
+.animate-float-up { animation: float-up 1s ease-out forwards; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--color-dark-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-dark-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-dark-muted); }
