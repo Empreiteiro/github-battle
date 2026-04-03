@@ -120,6 +120,40 @@ export function drawCharacter(
   }
 }
 
+// Fixed palette of 10 high-contrast colors for territory
+const TERRITORY_PALETTE = [
+  '#39d353', // green
+  '#58a6ff', // blue
+  '#bc8cff', // purple
+  '#f85149', // red
+  '#d29922', // orange
+  '#e3b341', // yellow
+  '#3fb950', // lime
+  '#79c0ff', // light blue
+  '#d2a8ff', // lavender
+  '#ff7b72', // salmon
+];
+
+export function getParticipantColor(index: number): string {
+  return TERRITORY_PALETTE[index % TERRITORY_PALETTE.length];
+}
+
+// Returns 4 intensity levels for a base hex color (like GitHub's contribution levels)
+export function getIntensityLevels(hex: string): string[] {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return [
+    `rgba(${r}, ${g}, ${b}, 0.25)`,
+    `rgba(${r}, ${g}, ${b}, 0.50)`,
+    `rgba(${r}, ${g}, ${b}, 0.75)`,
+    `rgba(${r}, ${g}, ${b}, 1.00)`,
+  ];
+}
+
+export const NEUTRAL_CELL = '#161b22';
+export const CELL_BORDER = '#0d1117';
+
 export function drawArenaBackground(ctx: CanvasRenderingContext2D, width: number, height: number) {
   // Dark ground
   const groundY = height * 0.7;

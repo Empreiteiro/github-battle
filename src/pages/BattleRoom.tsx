@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useBattlePolling } from '../hooks/useBattle';
 import type { Battle } from '../types';
 import { INTERVAL_LABELS } from '../types';
-import BattleArena from '../components/BattleArena';
+import TerritoryArena from '../components/TerritoryArena';
 import VotePanel from '../components/VotePanel';
 import ParticipantList from '../components/ParticipantList';
 import PasswordModal from '../components/PasswordModal';
@@ -140,7 +140,7 @@ export default function BattleRoom() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Arena - takes 2 columns */}
         <div className="lg:col-span-2 space-y-6">
-          <BattleArena battle={battle} prevBattle={prevBattle} />
+          <TerritoryArena battle={battle} prevBattle={prevBattle} />
 
           {/* Participant details on mobile */}
           <div className="lg:hidden">
