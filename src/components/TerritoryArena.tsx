@@ -45,9 +45,12 @@ function buildTerritoryGrid(battle: Battle): CellOwner[] {
     if (score === 0) continue;
     const cellCount = Math.max(1, Math.floor(TOTAL_CELLS * (score / totalScore)));
     for (let i = 0; i < cellCount && cellIndex < TOTAL_CELLS; i++) {
-      // Randomize intensity across the block (seeded by cell position for stability)
-      const seed = (cellIndex * 2654435761) >>> 0; // Knuth multiplicative hash
-      const intensity = seed % 4 as 0 | 1 | 2 | 3;
+      // MurmurHash3-style mixing for natural randomness
+      let h = (cellIndex * 374761393 + index * 668265263) >>> 0;
+      h = Math.imul(h ^ (h >>> 15), 2246822519);
+      h = Math.imul(h ^ (h >>> 13), 3266489917);
+      h = (h ^ (h >>> 16)) >>> 0;
+      const intensity = h % 4 as 0 | 1 | 2 | 3;
       grid[cellIndex] = { participantIndex: index, intensity };
       cellIndex++;
     }
