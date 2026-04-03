@@ -1,5 +1,6 @@
 import type { Participant, ScoringConfig, ScoringKey } from '../types';
 import { DEFAULT_SCORING, SCORING_LABELS } from '../types';
+import GitHubAvatar from './GitHubAvatar';
 
 interface Props {
   participants: Participant[];
@@ -34,8 +35,8 @@ export default function ParticipantList({ participants, scoring }: Props) {
                 <span className="pixel-font text-[10px] text-accent-yellow">
                   #{i + 1}
                 </span>
-                <img src={p.avatarUrl} alt={p.username} className="w-8 h-8 rounded-full" />
-                <span className="text-sm font-bold text-dark-text">{p.username}</span>
+                <GitHubAvatar username={p.username} avatarUrl={p.avatarUrl} />
+                <a href={`https://github.com/${p.username}`} target="_blank" rel="noopener noreferrer" className="text-sm font-bold text-dark-text hover:text-accent-blue transition-colors no-underline">{p.username}</a>
               </div>
               <span className="pixel-font text-sm text-accent-green">
                 {p.score}

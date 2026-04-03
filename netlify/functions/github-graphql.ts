@@ -1,5 +1,7 @@
 // GitHub GraphQL API client for fetching contribution data
-// Uses GITHUB_TOKEN env var — includes private contributions if the user enabled them
+// Uses GITHUB_TOKEN env var for authenticated requests
+// contributionCalendar.totalContributions includes private repo activity
+// visible on the user's profile (restricted contributions)
 
 const GITHUB_GRAPHQL = 'https://api.github.com/graphql';
 
@@ -12,26 +14,6 @@ interface ContributionStats {
   comments: number;
 }
 
-interface GraphQLContributionsResponse {
-  data?: {
-    user?: {
-      contributionsCollection: {
-        totalCommitContributions: number;
-        totalPullRequestContributions: number;
-        totalPullRequestReviewContributions: number;
-        totalIssueContributions: number;
-      };
-      pullRequests: {
-        totalCount: number;
-      };
-      issueComments: {
-        totalCount: number;
-      };
-    };
-  };
-  errors?: { message: string }[];
-}
-
 export async function fetchStatsGraphQL(
   username: string,
   since: string,
@@ -39,11 +21,15 @@ export async function fetchStatsGraphQL(
 ): Promise<ContributionStats> {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    // Fallback to REST API if no token
     return fetchStatsREST(username, since);
   }
 
   try {
+    const fromDate = new Date(since);
+    const toDate = new Date(until);
+    const now = new Date();
+    const effectiveTo = toDate > now ? now : toDate;
+
     const query = `
       query($username: String!, $from: DateTime!, $to: DateTime!) {
         user(login: $username) {
@@ -52,24 +38,14 @@ export async function fetchStatsGraphQL(
             totalPullRequestContributions
             totalPullRequestReviewContributions
             totalIssueContributions
-          }
-          pullRequests(states: MERGED, first: 0, orderBy: {field: CREATED_AT, direction: DESC}) {
-            totalCount
-          }
-          issueComments(first: 0) {
-            totalCount
+            restrictedContributionsCount
+            contributionCalendar {
+              totalContributions
+            }
           }
         }
       }
     `;
-
-    // GraphQL contributionsCollection requires dates within the last year
-    // and `from` must be at a day boundary in UTC
-    const fromDate = new Date(since);
-    const toDate = new Date(until);
-    const now = new Date();
-    // Clamp `to` to now if in the future
-    const effectiveTo = toDate > now ? now : toDate;
 
     const res = await fetch(GITHUB_GRAPHQL, {
       method: 'POST',
@@ -92,7 +68,7 @@ export async function fetchStatsGraphQL(
       return fetchStatsREST(username, since);
     }
 
-    const json: GraphQLContributionsResponse = await res.json();
+    const json = await res.json();
 
     if (json.errors || !json.data?.user) {
       console.error('GraphQL errors:', json.errors);
@@ -100,21 +76,30 @@ export async function fetchStatsGraphQL(
     }
 
     const contrib = json.data.user.contributionsCollection;
+    const publicTotal =
+      contrib.totalCommitContributions +
+      contrib.totalPullRequestContributions +
+      contrib.totalPullRequestReviewContributions +
+      contrib.totalIssueContributions;
+    const restrictedCount: number = contrib.restrictedContributionsCount || 0;
+    const calendarTotal: number = contrib.contributionCalendar.totalContributions || 0;
 
-    // For merged PRs and comments, the contributionsCollection doesn't
-    // break them out individually, so we estimate from the totals.
-    // The PR contributions count includes opened PRs; merged PRs are
-    // a subset. We'll use the REST API to get a more precise count
-    // for comments since GraphQL issueComments is lifetime total.
-    const restStats = await fetchCommentsAndMergedPRs(username, since, token);
+    // If user has restricted (private) contributions, the typed breakdown
+    // only covers public activity. We attribute the restricted count as
+    // commits since we can't know the actual breakdown.
+    // The calendar total = public typed contributions + restricted count.
+    const privateCommits = restrictedCount > 0 ? restrictedCount : Math.max(0, calendarTotal - publicTotal);
+
+    // Get comments and merged PRs from REST Events API (supplemental)
+    const restExtra = await fetchCommentsAndMergedPRs(username, since, token);
 
     return {
-      commits: contrib.totalCommitContributions,
+      commits: contrib.totalCommitContributions + privateCommits,
       pullRequests: contrib.totalPullRequestContributions,
-      pullRequestsMerged: restStats.mergedPRs,
+      pullRequestsMerged: restExtra.mergedPRs,
       issues: contrib.totalIssueContributions,
       reviews: contrib.totalPullRequestReviewContributions,
-      comments: restStats.comments,
+      comments: restExtra.comments,
     };
   } catch (err) {
     console.error('GraphQL fetch failed:', err);

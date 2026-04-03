@@ -1,4 +1,5 @@
 import type { Battle } from '../types';
+import GitHubAvatar from './GitHubAvatar';
 
 interface Props {
   battle: Battle;
@@ -23,7 +24,7 @@ export default function VotePanel({ battle, onVote }: Props) {
             <div key={p.username} className="space-y-1">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <img src={p.avatarUrl} alt={p.username} className="w-6 h-6 rounded-full" />
+                  <GitHubAvatar username={p.username} avatarUrl={p.avatarUrl} className="w-6 h-6" />
                   <span className="text-sm text-dark-text">{p.username}</span>
                 </div>
                 <span className="pixel-font text-[10px] text-dark-muted">

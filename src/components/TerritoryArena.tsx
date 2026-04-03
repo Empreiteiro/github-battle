@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, useMemo } from 'react';
 import type { Battle } from '../types';
 import { getParticipantColor, getIntensityLevels, NEUTRAL_CELL, CELL_BORDER } from '../utils/pixelArt';
 import { getAttackName, getAttackColor } from '../utils/scoring';
+import GitHubAvatar from './GitHubAvatar';
 
 const COLS = 52;
 const ROWS = 7;
@@ -273,7 +274,7 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
 
               return (
                 <div key={p.username} className="flex items-center gap-3 bg-dark-bg/50 p-2 rounded">
-                  <img src={p.avatarUrl} alt={p.username} className="w-8 h-8 rounded-full flex-shrink-0" />
+                  <GitHubAvatar username={p.username} avatarUrl={p.avatarUrl} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-dark-text truncate">{p.username}</span>
