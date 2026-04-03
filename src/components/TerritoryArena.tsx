@@ -45,10 +45,9 @@ function buildTerritoryGrid(battle: Battle): CellOwner[] {
     if (score === 0) continue;
     const cellCount = Math.max(1, Math.floor(TOTAL_CELLS * (score / totalScore)));
     for (let i = 0; i < cellCount && cellIndex < TOTAL_CELLS; i++) {
-      // Assign intensity based on position within this player's block
-      // Later cells (more recent conquest) are brighter
-      const progress = i / cellCount;
-      const intensity = progress < 0.25 ? 0 : progress < 0.5 ? 1 : progress < 0.75 ? 2 : 3;
+      // Randomize intensity across the block (seeded by cell position for stability)
+      const seed = (cellIndex * 2654435761) >>> 0; // Knuth multiplicative hash
+      const intensity = seed % 4 as 0 | 1 | 2 | 3;
       grid[cellIndex] = { participantIndex: index, intensity };
       cellIndex++;
     }
