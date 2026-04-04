@@ -11,10 +11,12 @@ import ShareButton from '../components/ShareButton';
 import ReplayPlayer from '../components/ReplayPlayer';
 import EmbedModal from '../components/EmbedModal';
 import ActivityHeatmap from '../components/ActivityHeatmap';
+import { useAuth } from '../auth/AuthContext';
 
 export default function BattleRoom() {
   const { id } = useParams<{ id: string }>();
-  const { battle, loading, error, vote, join } = useBattlePolling(id);
+  const { battle, loading, error, vote, join, leave } = useBattlePolling(id);
+  const { user } = useAuth();
   const [prevBattle, setPrevBattle] = useState<Battle | null>(null);
   const prevRef = useRef<Battle | null>(null);
 
@@ -129,8 +131,15 @@ export default function BattleRoom() {
               EMBED
             </button>
 
-            {/* Join button */}
-            {(battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) ? (
+            {/* Join or Leave */}
+            {user && battle.participants.some(p => p.username === user.username) && battle.status !== 'finished' ? (
+              <button
+                onClick={() => leave(user.username)}
+                className="pixel-font text-[10px] bg-accent-red/20 text-accent-red border border-accent-red/50 py-2 rounded hover:bg-accent-red/30 transition-colors cursor-pointer text-center"
+              >
+                LEAVE
+              </button>
+            ) : (battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) ? (
               <button
                 onClick={() => showJoin ? handleJoinClick() : setShowJoin(true)}
                 className="pixel-font text-[10px] bg-accent-blue/20 text-accent-blue border border-accent-blue/50 py-2 rounded hover:bg-accent-blue/30 transition-colors cursor-pointer text-center"

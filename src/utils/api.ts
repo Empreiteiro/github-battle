@@ -96,6 +96,12 @@ export const api = {
       () => localStore.refreshScores(id),
     ),
 
+  leaveBattle: (id: string, username: string) =>
+    withFallback(
+      () => request<Battle>('/battles-leave', { method: 'POST', body: JSON.stringify({ id, username }) }),
+      () => localStore.leaveBattle(id, username),
+    ),
+
   // Tournaments
   listTournaments: () =>
     withFallback(

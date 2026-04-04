@@ -149,6 +149,18 @@ export const localStore = {
     return battle;
   },
 
+  async leaveBattle(id: string, username: string): Promise<Battle> {
+    const battle = await localStore.getBattle(id);
+    const idx = battle.participants.findIndex(p => p.username === username);
+    if (idx === -1) throw new Error('Not in this battle');
+    battle.participants.splice(idx, 1);
+    delete battle.votes[username];
+    if (battle.participants.length === 0) battle.status = 'finished';
+    else if (battle.participants.length < 2 && battle.status === 'active') battle.status = 'waiting';
+    save(battle);
+    return battle;
+  },
+
   async vote(id: string, data: VoteRequest): Promise<Battle> {
     const battle = await localStore.getBattle(id);
     battle.votes[data.username] = (battle.votes[data.username] || 0) + 1;
