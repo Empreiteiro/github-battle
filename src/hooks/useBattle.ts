@@ -59,5 +59,11 @@ export function useBattlePolling(id: string | undefined, intervalMs = 30_000) {
     setBattle(updated);
   }, [id, setBattle]);
 
-  return { battle, loading, error, vote, join, refetch };
+  const leave = useCallback(async (username: string) => {
+    if (!id) return;
+    const updated = await api.leaveBattle(id, username);
+    setBattle(updated);
+  }, [id, setBattle]);
+
+  return { battle, loading, error, vote, join, leave, refetch };
 }
