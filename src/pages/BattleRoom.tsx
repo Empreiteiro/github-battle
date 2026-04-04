@@ -8,6 +8,7 @@ import VotePanel from '../components/VotePanel';
 import ParticipantList from '../components/ParticipantList';
 import PasswordModal from '../components/PasswordModal';
 import ShareButton from '../components/ShareButton';
+import ReplayPlayer from '../components/ReplayPlayer';
 
 export default function BattleRoom() {
   const { id } = useParams<{ id: string }>();
@@ -145,6 +146,13 @@ export default function BattleRoom() {
       <div className="mb-6">
         <TerritoryArena battle={battle} prevBattle={prevBattle} />
       </div>
+
+      {/* Replay Player — shown for battles with history */}
+      {battle.scoreHistory && battle.scoreHistory.length >= 2 && (
+        <div className="mb-6">
+          <ReplayPlayer battle={battle} />
+        </div>
+      )}
 
       {/* Details Grid — stretch columns to equal height */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">

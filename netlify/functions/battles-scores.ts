@@ -59,6 +59,14 @@ export default async function handler(request: Request, _context: Context) {
         p.hp = maxScore === 0 ? 100 : Math.max(5, Math.round((p.score / maxScore) * 100));
       }
 
+      // Record score snapshot for replay
+      const snapshot: Record<string, number> = {};
+      for (const p of battle.participants) {
+        snapshot[p.username] = p.score;
+      }
+      if (!battle.scoreHistory) battle.scoreHistory = [];
+      battle.scoreHistory.push({ timestamp: now.toISOString(), scores: snapshot });
+
       battle.lastRefresh = now.toISOString();
       await saveBattle(battle);
     }
