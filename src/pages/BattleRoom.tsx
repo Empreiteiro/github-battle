@@ -20,6 +20,8 @@ export default function BattleRoom() {
   const [joinUsername, setJoinUsername] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
+  const [showReplay, setShowReplay] = useState(false);
+  const hasReplay = !!(battle?.scoreHistory && battle.scoreHistory.length >= 2);
 
   // Track previous battle state for attack animations
   useEffect(() => {
@@ -99,6 +101,20 @@ export default function BattleRoom() {
         <div className="flex items-center gap-2">
           <ShareButton battle={battle} />
 
+          {/* Replay toggle */}
+          {hasReplay && (
+            <button
+              onClick={() => setShowReplay(!showReplay)}
+              className={`pixel-font text-[10px] px-3 py-2 rounded border transition-colors cursor-pointer flex items-center gap-2 ${
+                showReplay
+                  ? 'bg-accent-purple/20 text-accent-purple border-accent-purple/50'
+                  : 'bg-dark-bg text-dark-muted border-dark-border hover:bg-dark-border/50 hover:text-dark-text'
+              }`}
+            >
+              &#127916; REPLAY
+            </button>
+          )}
+
         {/* Join button */}
         {(battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) && (
           <div className="flex items-center gap-2">
@@ -142,17 +158,14 @@ export default function BattleRoom() {
         <p className="text-accent-red text-xs mb-4">{joinError}</p>
       )}
 
-      {/* Territory Arena — full width */}
+      {/* Territory Arena or Replay — full width, swappable */}
       <div className="mb-6">
-        <TerritoryArena battle={battle} prevBattle={prevBattle} />
-      </div>
-
-      {/* Replay Player — shown for battles with history */}
-      {battle.scoreHistory && battle.scoreHistory.length >= 2 && (
-        <div className="mb-6">
+        {showReplay && hasReplay ? (
           <ReplayPlayer battle={battle} />
-        </div>
-      )}
+        ) : (
+          <TerritoryArena battle={battle} prevBattle={prevBattle} />
+        )}
+      </div>
 
       {/* Details Grid — stretch columns to equal height */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
