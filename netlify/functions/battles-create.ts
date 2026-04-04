@@ -80,7 +80,7 @@ export default async function handler(request: Request, _context: Context) {
       interval,
       startDate,
       endDate,
-      status: 'active',
+      status: participantList.length >= 2 ? 'active' : 'waiting',
       participants: participantList,
       votes: {},
       maxParticipants: maxParticipants || 10,

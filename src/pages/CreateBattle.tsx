@@ -16,7 +16,7 @@ export default function CreateBattle() {
   const [interval, setInterval] = useState<BattleInterval>('24h');
   const [customStart, setCustomStart] = useState(toLocalDatetime(new Date(Date.now() - 24 * 3600_000)));
   const [customEnd, setCustomEnd] = useState(toLocalDatetime(new Date(Date.now() + 24 * 3600_000)));
-  const [participants, setParticipants] = useState(['', '']);
+  const [participants, setParticipants] = useState(['']);
   const [maxParticipants, setMaxParticipants] = useState(10);
   const [scoring, setScoring] = useState<ScoringConfig>(structuredClone(DEFAULT_SCORING));
   const [loading, setLoading] = useState(false);
@@ -61,7 +61,7 @@ export default function CreateBattle() {
   };
 
   const removeParticipant = (index: number) => {
-    if (participants.length > 2) {
+    if (participants.length > 1) {
       setParticipants(participants.filter((_, i) => i !== index));
     }
   };
@@ -81,8 +81,8 @@ export default function CreateBattle() {
       setError('Choose a battle name');
       return;
     }
-    if (validParticipants.length < 2) {
-      setError('Add at least 2 participants');
+    if (validParticipants.length < 1) {
+      setError('Add at least 1 participant');
       return;
     }
     if (new Date(customStart) >= new Date(customEnd)) {
@@ -242,7 +242,7 @@ export default function CreateBattle() {
                   placeholder={`Fighter ${i + 1}`}
                   className="flex-1 bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-green outline-none"
                 />
-                {participants.length > 2 && (
+                {participants.length > 1 && (
                   <button
                     type="button"
                     onClick={() => removeParticipant(i)}

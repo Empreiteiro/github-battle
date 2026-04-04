@@ -49,6 +49,12 @@ export default async function handler(request: Request, _context: Context) {
       hp: 100,
     });
 
+    // Activate battle when a challenger joins a waiting battle
+    if (battle.status === 'waiting' && battle.participants.length >= 2) {
+      battle.status = 'active';
+      battle.lastRefresh = battle.startDate; // force immediate score refresh
+    }
+
     await saveBattle(battle);
 
     return new Response(JSON.stringify(sanitizeBattle(battle)), {

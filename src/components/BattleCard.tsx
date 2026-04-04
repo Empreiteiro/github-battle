@@ -52,9 +52,13 @@ export default function BattleCard({ battle }: Props) {
         {battle.hasPassword && <span title="Private room">&#128274;</span>}
       </div>
 
-      {battle.participants.length >= 2 && (
+      {battle.participants.length >= 1 && (
         <div className="mt-3 text-center">
-          {battle.participants.length === 2 ? (
+          {battle.status === 'waiting' ? (
+            <span className="pixel-font text-[10px] text-accent-orange">
+              {battle.participants[0]?.username} awaits a challenger!
+            </span>
+          ) : battle.participants.length === 2 ? (
             <div className="flex items-center gap-2">
               <div className="flex-1 text-right">
                 <span className="pixel-font text-[10px] text-accent-green">

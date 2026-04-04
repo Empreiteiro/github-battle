@@ -16,6 +16,7 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
+  const waitingBattles = battles.filter(b => b.status === 'waiting');
   const activeBattles = battles.filter(b => b.status === 'active');
   const finishedBattles = battles.filter(b => b.status === 'finished');
 
@@ -66,6 +67,21 @@ export default function Home() {
             If running locally, make sure the Netlify CLI is running.
           </p>
         </div>
+      )}
+
+      {/* Waiting for Challengers */}
+      {waitingBattles.length > 0 && (
+        <section className="mb-8">
+          <h2 className="pixel-font text-sm text-accent-orange mb-4 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-accent-orange animate-pulse" />
+            LOOKING FOR CHALLENGERS ({waitingBattles.length})
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {waitingBattles.map(b => (
+              <BattleCard key={b.id} battle={b} />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Active Battles */}

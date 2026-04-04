@@ -235,14 +235,37 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
             &#127942; BATTLE OVER &mdash; WINNER: {winner?.username}
           </span>
         ) : (
-          <span className="pixel-font text-[10px] text-dark-muted">
-            Waiting to start...
+          <span className="pixel-font text-[10px] text-accent-orange animate-pulse">
+            &#9876;&#65039; WAITING FOR CHALLENGERS
           </span>
         )}
       </div>
 
-      {/* Territory Grid */}
-      <div className="relative p-4">
+      {/* Waiting state — challenge prompt */}
+      {battle.status === 'waiting' && (
+        <div className="p-8 text-center">
+          <div className="mb-4">
+            {battle.participants[0] && (
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <GitHubAvatar username={battle.participants[0].username} avatarUrl={battle.participants[0].avatarUrl} className="w-12 h-12" />
+                <div className="text-left">
+                  <a href={`https://github.com/${battle.participants[0].username}`} target="_blank" rel="noopener noreferrer" className="pixel-font text-sm text-accent-green no-underline hover:text-accent-blue transition-colors">{battle.participants[0].username}</a>
+                  <p className="text-dark-muted text-xs">is looking for a challenger!</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <p className="pixel-font text-[10px] text-dark-muted mb-2">
+            Scores will be revealed once a challenger joins.
+          </p>
+          <p className="text-dark-muted text-xs">
+            Click <b className="text-accent-blue">+ JOIN BATTLE</b> above to accept the challenge.
+          </p>
+        </div>
+      )}
+
+      {/* Territory Grid — hidden during waiting */}
+      {battle.status !== 'waiting' && <div className="relative p-4">
         <canvas ref={canvasRef} className="w-full block" style={{ imageRendering: 'pixelated' }} />
 
         {/* Floating texts */}
@@ -260,10 +283,10 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
             {ft.text}
           </div>
         ))}
-      </div>
+      </div>}
 
-      {/* Legend / Scoreboard */}
-      <div className="p-4 bg-dark-bg/30 border-t border-dark-border">
+      {/* Legend / Scoreboard — hidden during waiting */}
+      {battle.status !== 'waiting' && <div className="p-4 bg-dark-bg/30 border-t border-dark-border">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {[...battle.participants]
             .sort((a, b) => b.score - a.score)
@@ -302,7 +325,7 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
               );
             })}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

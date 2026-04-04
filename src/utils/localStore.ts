@@ -98,7 +98,7 @@ export const localStore = {
       interval: data.interval,
       startDate,
       endDate,
-      status: 'active',
+      status: participants.length >= 2 ? 'active' : 'waiting',
       participants,
       votes: {},
       maxParticipants: data.maxParticipants || 10,
@@ -137,6 +137,12 @@ export const localStore = {
       stats: { commits: 0, pullRequests: 0, pullRequestsMerged: 0, issues: 0, reviews: 0, comments: 0 },
       hp: 100,
     });
+
+    // Activate battle when a challenger joins a waiting battle
+    if (battle.status === 'waiting' && battle.participants.length >= 2) {
+      battle.status = 'active';
+      battle.lastRefresh = battle.startDate; // force immediate score refresh
+    }
 
     save(battle);
     return battle;
