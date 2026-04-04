@@ -1,11 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
-import CreateBattle from './pages/CreateBattle';
+import Create from './pages/Create';
 import BattleRoom from './pages/BattleRoom';
 import Embed from './pages/Embed';
-import CreateTournament from './pages/CreateTournament';
 import TournamentView from './pages/TournamentView';
 
 function App() {
@@ -13,15 +12,15 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Embed route — no layout (minimal, for iframes) */}
+          {/* Embed route — no layout */}
           <Route path="/embed/:id" element={<Embed />} />
 
           {/* Main routes with layout */}
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/create" element={<CreateBattle />} />
+            <Route path="/create" element={<Create />} />
+            <Route path="/create-tournament" element={<Navigate to="/create" replace />} />
             <Route path="/battle/:id" element={<BattleRoom />} />
-            <Route path="/create-tournament" element={<CreateTournament />} />
             <Route path="/tournament/:id" element={<TournamentView />} />
           </Route>
         </Routes>
