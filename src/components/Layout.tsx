@@ -16,7 +16,7 @@ export default function Layout() {
           </Link>
 
           <div className="flex items-center gap-3">
-            <div className="grid grid-cols-2 gap-2 w-[240px]">
+            <div className="grid grid-cols-2 gap-2 w-[300px]">
               <Link
                 to="/create"
                 className="pixel-font text-[10px] bg-accent-green/20 text-accent-green border border-accent-green/50 px-3 py-2 rounded hover:bg-accent-green/30 transition-colors no-underline text-center"

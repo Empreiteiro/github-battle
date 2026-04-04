@@ -105,7 +105,7 @@ export default function BattleRoom() {
 
         <div className="flex flex-col items-end gap-2">
           {/* Action buttons — equal width */}
-          <div className="grid grid-cols-4 gap-2 w-full max-w-[420px]">
+          <div className="grid grid-cols-4 gap-2 w-full max-w-[520px]">
             <ShareButton battle={battle} />
 
             {/* Replay toggle */}
@@ -153,7 +153,7 @@ export default function BattleRoom() {
 
           {/* Join input (expanded below buttons) */}
           {showJoin && (battle.status === 'active' || battle.status === 'waiting') && (
-            <div className="flex items-center gap-2 w-full max-w-[420px]">
+            <div className="flex items-center gap-2 w-full max-w-[520px]">
               <input
                 type="text"
                 value={joinUsername}
