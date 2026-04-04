@@ -7,6 +7,7 @@ import TerritoryArena from '../components/TerritoryArena';
 import VotePanel from '../components/VotePanel';
 import ParticipantList from '../components/ParticipantList';
 import PasswordModal from '../components/PasswordModal';
+import ShareButton from '../components/ShareButton';
 
 export default function BattleRoom() {
   const { id } = useParams<{ id: string }>();
@@ -94,8 +95,11 @@ export default function BattleRoom() {
           </div>
         </div>
 
+        <div className="flex items-center gap-2">
+          <ShareButton battle={battle} />
+
         {/* Join button */}
-        {battle.status === 'active' && battle.participants.length < (battle.maxParticipants || 10) && (
+        {(battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) && (
           <div className="flex items-center gap-2">
             {showJoin ? (
               <div className="flex items-center gap-2">
@@ -130,6 +134,7 @@ export default function BattleRoom() {
             )}
           </div>
         )}
+        </div>
       </div>
 
       {joinError && !showPassword && (

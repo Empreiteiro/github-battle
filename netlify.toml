@@ -2,6 +2,7 @@
   command = "npm run build"
   publish = "dist"
   functions = "netlify/functions"
+  edge_functions = "netlify/edge-functions"
 
 [[redirects]]
   from = "/api/*"
@@ -12,3 +13,7 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+[[edge_functions]]
+  path = "/battle/*"
+  function = "og-metadata"
