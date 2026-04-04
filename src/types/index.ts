@@ -7,11 +7,15 @@ export interface ParticipantStats {
   comments: number;
 }
 
+// Bucketed event counts for heatmap: [dayOfWeek 0-6][hour 0-23] = count
+export type HeatmapData = number[][];
+
 export interface Participant {
   username: string;
   avatarUrl: string;
   score: number;
   stats: ParticipantStats;
+  heatmap?: HeatmapData;
   hp: number; // 0-100, visual representation
 }
 
