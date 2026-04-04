@@ -103,6 +103,7 @@ export const localStore = {
       votes: {},
       maxParticipants: data.maxParticipants || 10,
       scoring: data.scoring || DEFAULT_SCORING,
+      repos: data.repos && data.repos.length > 0 ? data.repos : undefined,
       lastRefresh: startDate, // force immediate refresh on first load
       createdAt: now.toISOString(),
     };
@@ -168,7 +169,7 @@ export const localStore = {
     const neverFetched = battle.participants.every(p => p.score === 0 && p.stats.commits === 0);
     if ((timeSinceRefresh > 60_000 || neverFetched) && battle.status === 'active') {
       const statsPromises = battle.participants.map(p =>
-        fetchGitHubEvents(p.username, battle.startDate),
+        fetchGitHubEvents(p.username, battle.startDate, battle.repos),
       );
       const allStats = await Promise.all(statsPromises);
 

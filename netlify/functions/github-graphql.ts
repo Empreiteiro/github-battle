@@ -18,10 +18,17 @@ export async function fetchStatsGraphQL(
   username: string,
   since: string,
   until: string,
+  repos?: string[],
 ): Promise<ContributionStats> {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    return fetchStatsREST(username, since);
+    return fetchStatsREST(username, since, repos);
+  }
+
+  // When filtering by specific repos, GraphQL contributionsCollection
+  // doesn't support per-repo breakdown — use REST Events API instead
+  if (repos && repos.length > 0) {
+    return fetchStatsREST(username, since, repos);
   }
 
   try {
@@ -65,14 +72,14 @@ export async function fetchStatsGraphQL(
 
     if (!res.ok) {
       console.error(`GraphQL request failed: ${res.status}`);
-      return fetchStatsREST(username, since);
+      return fetchStatsREST(username, since, repos);
     }
 
     const json = await res.json();
 
     if (json.errors || !json.data?.user) {
       console.error('GraphQL errors:', json.errors);
-      return fetchStatsREST(username, since);
+      return fetchStatsREST(username, since, repos);
     }
 
     const contrib = json.data.user.contributionsCollection;
@@ -103,7 +110,7 @@ export async function fetchStatsGraphQL(
     };
   } catch (err) {
     console.error('GraphQL fetch failed:', err);
-    return fetchStatsREST(username, since);
+    return fetchStatsREST(username, since, repos);
   }
 }
 
@@ -153,11 +160,13 @@ async function fetchCommentsAndMergedPRs(
   return { mergedPRs, comments };
 }
 
-// Fallback: REST Events API (no auth needed, public repos only)
+// Fallback: REST Events API with optional repo filtering
 async function fetchStatsREST(
   username: string,
   since: string,
+  repos?: string[],
 ): Promise<ContributionStats> {
+  const repoSet = repos && repos.length > 0 ? new Set(repos.map(r => r.toLowerCase())) : null;
   const stats: ContributionStats = {
     commits: 0,
     pullRequests: 0,
@@ -190,6 +199,10 @@ async function fetchStatsREST(
         if (new Date(event.created_at).getTime() < sinceDate) {
           done = true;
           break;
+        }
+        // Skip events not in the allowed repos
+        if (repoSet && event.repo?.name && !repoSet.has(event.repo.name.toLowerCase())) {
+          continue;
         }
         switch (event.type) {
           case 'PushEvent':

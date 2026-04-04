@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { BattleInterval, ScoringConfig, ScoringKey } from '../types';
 import { INTERVAL_LABELS, DEFAULT_SCORING, SCORING_LABELS } from '../types';
 import { api } from '../utils/api';
+import RepoFilter from '../components/RepoFilter';
 
 function toLocalDatetime(date: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');
@@ -19,6 +20,7 @@ export default function CreateBattle() {
   const [participants, setParticipants] = useState(['']);
   const [maxParticipants, setMaxParticipants] = useState(10);
   const [scoring, setScoring] = useState<ScoringConfig>(structuredClone(DEFAULT_SCORING));
+  const [repos, setRepos] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -101,6 +103,7 @@ export default function CreateBattle() {
         participants: validParticipants,
         maxParticipants,
         scoring,
+        repos: repos.length > 0 ? repos : undefined,
       });
       navigate(`/battle/${battle.id}`);
     } catch (err) {
@@ -224,6 +227,17 @@ export default function CreateBattle() {
           </div>
           <p className="text-[10px] text-dark-muted mt-2">
             Toggle which GitHub activities count and customize point values per type.
+          </p>
+        </div>
+
+        {/* Repo Filter (optional) */}
+        <div className="pixel-border bg-dark-card p-4 rounded-lg">
+          <label className="pixel-font text-[10px] text-accent-blue block mb-2">
+            FILTER BY REPOS (optional)
+          </label>
+          <RepoFilter repos={repos} onChange={setRepos} />
+          <p className="text-[10px] text-dark-muted mt-2">
+            Only activity in these repos will count. Leave empty for all repos.
           </p>
         </div>
 

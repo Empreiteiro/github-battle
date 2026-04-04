@@ -198,6 +198,24 @@ export default function BattleRoom() {
                 <span>Refresh</span>
                 <span className="text-accent-green">every 30s</span>
               </div>
+              {battle.repos && battle.repos.length > 0 && (
+                <div className="pt-2 border-t border-dark-border/50">
+                  <span className="block mb-1">Repos</span>
+                  <div className="flex flex-wrap gap-1">
+                    {battle.repos.map(repo => (
+                      <a
+                        key={repo}
+                        href={`https://github.com/${repo}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block bg-accent-blue/15 text-accent-blue text-[10px] px-2 py-0.5 rounded border border-accent-blue/30 no-underline hover:bg-accent-blue/25 transition-colors"
+                      >
+                        {repo}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
