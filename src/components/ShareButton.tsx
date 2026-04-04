@@ -50,11 +50,8 @@ export default function ShareButton({ battle }: Props) {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border px-3 py-2 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer flex items-center gap-2"
+        className="w-full pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border py-2 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer text-center"
       >
-        <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-          <path d="M3.5 3.5a2 2 0 114 0 2 2 0 01-4 0zm6.5 0a2 2 0 114 0 2 2 0 01-4 0zM5.5 9.5a2 2 0 114 0 2 2 0 01-4 0zm-4-4l4 2m2 0l4-2m-4 2v4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-        </svg>
         SHARE
       </button>
 

@@ -11,16 +11,16 @@ export default function Layout() {
               GitHub Battle
             </h1>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-2 w-[240px]">
             <Link
               to="/create"
-              className="pixel-font text-[10px] bg-accent-green/20 text-accent-green border border-accent-green/50 px-3 py-2 rounded hover:bg-accent-green/30 transition-colors no-underline"
+              className="pixel-font text-[10px] bg-accent-green/20 text-accent-green border border-accent-green/50 px-3 py-2 rounded hover:bg-accent-green/30 transition-colors no-underline text-center"
             >
               + Battle
             </Link>
             <Link
               to="/create-tournament"
-              className="pixel-font text-[10px] bg-accent-purple/20 text-accent-purple border border-accent-purple/50 px-3 py-2 rounded hover:bg-accent-purple/30 transition-colors no-underline"
+              className="pixel-font text-[10px] bg-accent-purple/20 text-accent-purple border border-accent-purple/50 px-3 py-2 rounded hover:bg-accent-purple/30 transition-colors no-underline text-center"
             >
               + Tournament
             </Link>

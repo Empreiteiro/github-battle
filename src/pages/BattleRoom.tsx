@@ -101,67 +101,72 @@ export default function BattleRoom() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <ShareButton battle={battle} />
+        <div className="flex flex-col items-end gap-2">
+          {/* Action buttons — equal width */}
+          <div className="grid grid-cols-4 gap-2 w-full max-w-[420px]">
+            <ShareButton battle={battle} />
 
-          {/* Replay toggle */}
-          {hasReplay && (
+            {/* Replay toggle */}
             <button
-              onClick={() => setShowReplay(!showReplay)}
-              className={`pixel-font text-[10px] px-3 py-2 rounded border transition-colors cursor-pointer flex items-center gap-2 ${
-                showReplay
-                  ? 'bg-accent-purple/20 text-accent-purple border-accent-purple/50'
-                  : 'bg-dark-bg text-dark-muted border-dark-border hover:bg-dark-border/50 hover:text-dark-text'
+              onClick={() => hasReplay && setShowReplay(!showReplay)}
+              disabled={!hasReplay}
+              className={`pixel-font text-[10px] py-2 rounded border transition-colors cursor-pointer text-center ${
+                !hasReplay
+                  ? 'bg-dark-bg text-dark-muted/40 border-dark-border/50 cursor-not-allowed'
+                  : showReplay
+                    ? 'bg-accent-purple/20 text-accent-purple border-accent-purple/50'
+                    : 'bg-dark-bg text-dark-muted border-dark-border hover:bg-dark-border/50 hover:text-dark-text'
               }`}
             >
-              &#127916; REPLAY
+              REPLAY
             </button>
-          )}
 
-          {/* Embed button */}
-          <button
-            onClick={() => setShowEmbed(true)}
-            className="pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border px-3 py-2 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer flex items-center gap-2"
-          >
-            &lt;/&gt; EMBED
-          </button>
+            {/* Embed button */}
+            <button
+              onClick={() => setShowEmbed(true)}
+              className="pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border py-2 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer text-center"
+            >
+              EMBED
+            </button>
 
-        {/* Join button */}
-        {(battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) && (
-          <div className="flex items-center gap-2">
-            {showJoin ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={joinUsername}
-                  onChange={e => setJoinUsername(e.target.value)}
-                  placeholder="GitHub username"
-                  className="bg-dark-bg border border-dark-border text-dark-text px-3 py-2 rounded text-sm focus:border-accent-green outline-none"
-                  onKeyDown={e => e.key === 'Enter' && handleJoinClick()}
-                />
-                <button
-                  onClick={handleJoinClick}
-                  className="pixel-font text-[10px] bg-accent-green/20 text-accent-green border border-accent-green/50 px-3 py-2 rounded hover:bg-accent-green/30 transition-colors cursor-pointer"
-                >
-                  JOIN
-                </button>
-                <button
-                  onClick={() => { setShowJoin(false); setJoinError(null); }}
-                  className="text-dark-muted hover:text-dark-text px-2 cursor-pointer"
-                >
-                  &#10005;
-                </button>
-              </div>
-            ) : (
+            {/* Join button */}
+            {(battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) ? (
               <button
-                onClick={() => setShowJoin(true)}
-                className="pixel-font text-[10px] bg-accent-blue/20 text-accent-blue border border-accent-blue/50 px-4 py-2 rounded hover:bg-accent-blue/30 transition-colors cursor-pointer"
+                onClick={() => showJoin ? handleJoinClick() : setShowJoin(true)}
+                className="pixel-font text-[10px] bg-accent-blue/20 text-accent-blue border border-accent-blue/50 py-2 rounded hover:bg-accent-blue/30 transition-colors cursor-pointer text-center"
               >
-                + JOIN BATTLE
+                + JOIN
               </button>
+            ) : (
+              <div />
             )}
           </div>
-        )}
+
+          {/* Join input (expanded below buttons) */}
+          {showJoin && (battle.status === 'active' || battle.status === 'waiting') && (
+            <div className="flex items-center gap-2 w-full max-w-[420px]">
+              <input
+                type="text"
+                value={joinUsername}
+                onChange={e => setJoinUsername(e.target.value)}
+                placeholder="GitHub username"
+                className="flex-1 bg-dark-bg border border-dark-border text-dark-text px-3 py-2 rounded text-sm focus:border-accent-green outline-none"
+                onKeyDown={e => e.key === 'Enter' && handleJoinClick()}
+              />
+              <button
+                onClick={handleJoinClick}
+                className="pixel-font text-[10px] bg-accent-green/20 text-accent-green border border-accent-green/50 px-3 py-2 rounded hover:bg-accent-green/30 transition-colors cursor-pointer"
+              >
+                GO
+              </button>
+              <button
+                onClick={() => { setShowJoin(false); setJoinError(null); }}
+                className="text-dark-muted hover:text-dark-text px-2 cursor-pointer"
+              >
+                &#10005;
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
