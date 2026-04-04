@@ -50,6 +50,12 @@ export default function Home() {
           <span>&#128994; Review: <b className="text-accent-red">8 pts</b></span>
           <span>&#9898; Comment: <b className="text-dark-text">1 pt</b></span>
         </div>
+        <p className="text-[10px] text-dark-muted mt-3 text-center">
+          &#128274; Want private repo contributions to count? Enable <b>Private contributions</b> in your{' '}
+          <a href="https://github.com/settings/profile" target="_blank" rel="noopener noreferrer" className="text-accent-blue underline hover:text-accent-blue/80">
+            GitHub profile settings
+          </a>.
+        </p>
       </div>
 
       {loading && (

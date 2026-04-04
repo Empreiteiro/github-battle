@@ -228,6 +228,16 @@ export default function BattleRoom() {
               )}
             </div>
           </div>
+
+          {/* Private contributions tip */}
+          <div className="pixel-border bg-dark-card p-3 rounded-lg text-center">
+            <p className="text-[10px] text-dark-muted">
+              &#128274; Private contributions not showing? Enable <b>Private contributions</b> in your{' '}
+              <a href="https://github.com/settings/profile" target="_blank" rel="noopener noreferrer" className="text-accent-blue underline hover:text-accent-blue/80">
+                GitHub settings
+              </a>.
+            </p>
+          </div>
         </div>
       </div>
 
