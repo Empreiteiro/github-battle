@@ -1,15 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Battle, Tournament } from '../types';
 import { api } from '../utils/api';
 import BattleCard from '../components/BattleCard';
 import TournamentCard from '../components/TournamentCard';
 
+function matchesBattle(battle: Battle, q: string): boolean {
+  const lower = q.toLowerCase();
+  if (battle.name.toLowerCase().includes(lower)) return true;
+  if (battle.participants.some(p => p.username.toLowerCase().includes(lower))) return true;
+  if (battle.repos?.some(r => r.toLowerCase().includes(lower))) return true;
+  return false;
+}
+
+function matchesTournament(tournament: Tournament, q: string): boolean {
+  const lower = q.toLowerCase();
+  if (tournament.name.toLowerCase().includes(lower)) return true;
+  if (tournament.participants.some(p => p.toLowerCase().includes(lower))) return true;
+  if (tournament.repos?.some(r => r.toLowerCase().includes(lower))) return true;
+  if (tournament.champion?.toLowerCase().includes(lower)) return true;
+  return false;
+}
+
 export default function Home() {
   const [battles, setBattles] = useState<Battle[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     Promise.all([
@@ -22,9 +40,21 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
-  const waitingBattles = battles.filter(b => b.status === 'waiting');
-  const activeBattles = battles.filter(b => b.status === 'active');
-  const finishedBattles = battles.filter(b => b.status === 'finished');
+  const q = search.trim();
+  const filteredBattles = useMemo(
+    () => q ? battles.filter(b => matchesBattle(b, q)) : battles,
+    [battles, q],
+  );
+  const filteredTournaments = useMemo(
+    () => q ? tournaments.filter(t => matchesTournament(t, q)) : tournaments,
+    [tournaments, q],
+  );
+
+  const waitingBattles = filteredBattles.filter(b => b.status === 'waiting');
+  const activeBattles = filteredBattles.filter(b => b.status === 'active');
+  const finishedBattles = filteredBattles.filter(b => b.status === 'finished');
+
+  const totalResults = filteredBattles.length + filteredTournaments.length;
 
   return (
     <div>
@@ -63,6 +93,37 @@ export default function Home() {
           </a>.
         </p>
       </div>
+
+      {/* Search filter */}
+      {!loading && (battles.length > 0 || tournaments.length > 0) && (
+        <div className="mb-6">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M10.68 11.74a6 6 0 01-7.922-8.982 6 6 0 018.982 7.922l3.04 3.04a.749.749 0 01-.326 1.275.749.749 0 01-.734-.215zM11.5 7a4.499 4.499 0 10-8.997 0A4.499 4.499 0 0011.5 7z" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search battles, tournaments, players, or repos..."
+              className="w-full bg-dark-card border border-dark-border text-dark-text pl-10 pr-10 py-3 rounded-lg focus:border-accent-blue outline-none text-sm"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-muted hover:text-dark-text cursor-pointer"
+              >
+                &#10005;
+              </button>
+            )}
+          </div>
+          {q && (
+            <p className="text-[10px] text-dark-muted mt-2 text-center">
+              {totalResults} result{totalResults !== 1 ? 's' : ''} for "{q}"
+            </p>
+          )}
+        </div>
+      )}
 
       {loading && (
         <div className="text-center py-12">
@@ -126,43 +187,43 @@ export default function Home() {
       )}
 
       {/* Tournaments */}
-      {tournaments.length > 0 && (
+      {filteredTournaments.length > 0 && (
         <>
-          {tournaments.filter(t => t.status === 'registration').length > 0 && (
+          {filteredTournaments.filter(t => t.status === 'registration').length > 0 && (
             <section className="mb-8">
               <h2 className="pixel-font text-sm text-accent-purple mb-4 flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-accent-purple animate-pulse" />
-                TOURNAMENTS — OPEN REGISTRATION ({tournaments.filter(t => t.status === 'registration').length})
+                TOURNAMENTS — OPEN REGISTRATION ({filteredTournaments.filter(t => t.status === 'registration').length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tournaments.filter(t => t.status === 'registration').map(t => (
+                {filteredTournaments.filter(t => t.status === 'registration').map(t => (
                   <TournamentCard key={t.id} tournament={t} />
                 ))}
               </div>
             </section>
           )}
 
-          {tournaments.filter(t => t.status === 'active').length > 0 && (
+          {filteredTournaments.filter(t => t.status === 'active').length > 0 && (
             <section className="mb-8">
               <h2 className="pixel-font text-sm text-accent-green mb-4 flex items-center gap-2">
                 <span className="inline-block w-2 h-2 rounded-full bg-accent-green animate-pulse" />
-                TOURNAMENTS — LIVE ({tournaments.filter(t => t.status === 'active').length})
+                TOURNAMENTS — LIVE ({filteredTournaments.filter(t => t.status === 'active').length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tournaments.filter(t => t.status === 'active').map(t => (
+                {filteredTournaments.filter(t => t.status === 'active').map(t => (
                   <TournamentCard key={t.id} tournament={t} />
                 ))}
               </div>
             </section>
           )}
 
-          {tournaments.filter(t => t.status === 'finished').length > 0 && (
+          {filteredTournaments.filter(t => t.status === 'finished').length > 0 && (
             <section className="mb-8">
               <h2 className="pixel-font text-sm text-dark-muted mb-4">
-                &#127942; TOURNAMENTS — FINISHED ({tournaments.filter(t => t.status === 'finished').length})
+                &#127942; TOURNAMENTS — FINISHED ({filteredTournaments.filter(t => t.status === 'finished').length})
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {tournaments.filter(t => t.status === 'finished').map(t => (
+                {filteredTournaments.filter(t => t.status === 'finished').map(t => (
                   <TournamentCard key={t.id} tournament={t} />
                 ))}
               </div>
@@ -171,13 +232,24 @@ export default function Home() {
         </>
       )}
 
-      {!loading && battles.length === 0 && tournaments.length === 0 && (
+      {!loading && totalResults === 0 && !q && (
         <div className="text-center py-12">
           <p className="pixel-font text-sm text-dark-muted mb-4">
             No battles or tournaments yet...
           </p>
           <p className="text-dark-muted">
             Be the first to create one!
+          </p>
+        </div>
+      )}
+
+      {!loading && totalResults === 0 && q && (
+        <div className="text-center py-12">
+          <p className="pixel-font text-sm text-dark-muted mb-4">
+            No results for "{q}"
+          </p>
+          <p className="text-dark-muted">
+            Try a different search term.
           </p>
         </div>
       )}
