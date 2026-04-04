@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import CreateBattle from './pages/CreateBattle';
 import BattleRoom from './pages/BattleRoom';
 import Embed from './pages/Embed';
+import CreateTournament from './pages/CreateTournament';
+import TournamentView from './pages/TournamentView';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/create" element={<CreateBattle />} />
           <Route path="/battle/:id" element={<BattleRoom />} />
+          <Route path="/create-tournament" element={<CreateTournament />} />
+          <Route path="/tournament/:id" element={<TournamentView />} />
         </Route>
       </Routes>
     </BrowserRouter>

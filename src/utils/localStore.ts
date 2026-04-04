@@ -1,4 +1,4 @@
-import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest } from '../types';
+import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest, Tournament, CreateTournamentRequest, TournamentRound } from '../types';
 import { DEFAULT_SCORING } from '../types';
 import { fetchGitHubEvents } from './github';
 import { calculateScore, calculateHP } from './scoring';
@@ -200,5 +200,77 @@ export const localStore = {
 
     save(battle);
     return battle;
+  },
+
+  // --- Tournaments ---
+
+  async listTournaments(): Promise<Tournament[]> {
+    try {
+      const data = JSON.parse(localStorage.getItem('github-battle-tournaments') || '{}');
+      return Object.values(data as Record<string, Tournament>).sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    } catch { return []; }
+  },
+
+  async createTournament(data: CreateTournamentRequest): Promise<Tournament> {
+    const id = 't' + generateId();
+    const numRounds = Math.log2(data.size);
+    const rounds: TournamentRound[] = [];
+    for (let r = 1; r <= numRounds; r++) {
+      const matchCount = data.size / Math.pow(2, r);
+      rounds.push({
+        roundNumber: r,
+        matches: Array.from({ length: matchCount }, () => ({
+          battleId: null, player1: null, player2: null, winner: null,
+        })),
+        status: 'pending',
+      });
+    }
+
+    const participants: string[] = [];
+    const participantAvatars: Record<string, string> = {};
+    if (data.participants) {
+      for (const u of data.participants.filter(x => x.trim())) {
+        participants.push(u.trim());
+        participantAvatars[u.trim()] = `https://github.com/${u.trim()}.png`;
+      }
+    }
+
+    const tournament: Tournament = {
+      id, name: data.name, size: data.size,
+      roundDuration: data.roundDuration,
+      scoring: data.scoring || DEFAULT_SCORING,
+      repos: data.repos,
+      status: participants.length >= data.size ? 'active' : 'registration',
+      participants, participantAvatars, rounds,
+      createdAt: new Date().toISOString(),
+    };
+
+    const all = JSON.parse(localStorage.getItem('github-battle-tournaments') || '{}');
+    all[id] = tournament;
+    localStorage.setItem('github-battle-tournaments', JSON.stringify(all));
+    return tournament;
+  },
+
+  async getTournament(id: string): Promise<Tournament> {
+    const all = JSON.parse(localStorage.getItem('github-battle-tournaments') || '{}');
+    const t = all[id] as Tournament;
+    if (!t) throw new Error('Tournament not found');
+    return t;
+  },
+
+  async joinTournament(id: string, username: string): Promise<Tournament> {
+    const all = JSON.parse(localStorage.getItem('github-battle-tournaments') || '{}');
+    const t = all[id] as Tournament;
+    if (!t) throw new Error('Tournament not found');
+    if (t.status !== 'registration') throw new Error('Registration closed');
+    if (t.participants.includes(username)) throw new Error('Already registered');
+    t.participants.push(username);
+    t.participantAvatars[username] = `https://github.com/${username}.png`;
+    if (t.participants.length >= t.size) t.status = 'active';
+    all[id] = t;
+    localStorage.setItem('github-battle-tournaments', JSON.stringify(all));
+    return t;
   },
 };

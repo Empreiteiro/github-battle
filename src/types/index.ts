@@ -60,7 +60,8 @@ export interface Battle {
   votes: Record<string, number>;
   maxParticipants: number;
   scoring: ScoringConfig;
-  repos?: string[]; // e.g. ["owner/repo"] — empty = all repos
+  repos?: string[];
+  tournamentId?: string;
   scoreHistory?: ScoreSnapshot[];
   lastRefresh: string;
   createdAt: string;
@@ -112,4 +113,52 @@ export const SCORING: Record<string, number> = {
   issue: 3,
   review: 8,
   comment: 1,
+};
+
+// --- Tournaments ---
+
+export type TournamentSize = 4 | 8 | 16;
+export type TournamentStatus = 'registration' | 'active' | 'finished';
+
+export interface TournamentMatch {
+  battleId: string | null;
+  player1: string | null;
+  player2: string | null;
+  winner: string | null;
+}
+
+export interface TournamentRound {
+  roundNumber: number;
+  matches: TournamentMatch[];
+  status: 'pending' | 'active' | 'finished';
+}
+
+export interface Tournament {
+  id: string;
+  name: string;
+  size: TournamentSize;
+  roundDuration: BattleInterval;
+  scoring: ScoringConfig;
+  repos?: string[];
+  status: TournamentStatus;
+  participants: string[];
+  participantAvatars: Record<string, string>;
+  rounds: TournamentRound[];
+  champion?: string;
+  createdAt: string;
+}
+
+export interface CreateTournamentRequest {
+  name: string;
+  size: TournamentSize;
+  roundDuration: BattleInterval;
+  scoring?: ScoringConfig;
+  repos?: string[];
+  participants?: string[];
+}
+
+export const ROUND_NAMES: Record<number, Record<number, string>> = {
+  4: { 1: 'Semifinals', 2: 'Final' },
+  8: { 1: 'Quarterfinals', 2: 'Semifinals', 3: 'Final' },
+  16: { 1: 'Round of 16', 2: 'Quarterfinals', 3: 'Semifinals', 4: 'Final' },
 };

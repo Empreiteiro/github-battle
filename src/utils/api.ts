@@ -1,4 +1,4 @@
-import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest } from '../types';
+import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest, Tournament, CreateTournamentRequest } from '../types';
 import { localStore } from './localStore';
 
 const BASE = '/api';
@@ -94,5 +94,30 @@ export const api = {
     withFallback(
       () => request<Battle>(`/battles-scores?id=${id}`),
       () => localStore.refreshScores(id),
+    ),
+
+  // Tournaments
+  listTournaments: () =>
+    withFallback(
+      () => request<Tournament[]>('/tournaments-list'),
+      () => localStore.listTournaments(),
+    ),
+
+  createTournament: (data: CreateTournamentRequest) =>
+    withFallback(
+      () => request<Tournament>('/tournaments-create', { method: 'POST', body: JSON.stringify(data) }),
+      () => localStore.createTournament(data),
+    ),
+
+  getTournament: (id: string) =>
+    withFallback(
+      () => request<Tournament>(`/tournaments-get?id=${id}`),
+      () => localStore.getTournament(id),
+    ),
+
+  joinTournament: (id: string, username: string) =>
+    withFallback(
+      () => request<Tournament>('/tournaments-join', { method: 'POST', body: JSON.stringify({ id, username }) }),
+      () => localStore.joinTournament(id, username),
     ),
 };
