@@ -1,18 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import type { Battle } from '../types';
+import type { Battle, Tournament } from '../types';
 import { api } from '../utils/api';
 import BattleCard from '../components/BattleCard';
+import TournamentCard from '../components/TournamentCard';
 
 export default function Home() {
   const [battles, setBattles] = useState<Battle[]>([]);
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    api.listBattles()
-      .then(setBattles)
-      .catch(err => setError(err.message))
+    Promise.all([
+      api.listBattles().catch(() => [] as Battle[]),
+      api.listTournaments().catch(() => [] as Tournament[]),
+    ]).then(([b, t]) => {
+      setBattles(b);
+      setTournaments(t);
+    }).catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -119,13 +125,59 @@ export default function Home() {
         </section>
       )}
 
-      {!loading && battles.length === 0 && (
+      {/* Tournaments */}
+      {tournaments.length > 0 && (
+        <>
+          {tournaments.filter(t => t.status === 'registration').length > 0 && (
+            <section className="mb-8">
+              <h2 className="pixel-font text-sm text-accent-purple mb-4 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-accent-purple animate-pulse" />
+                TOURNAMENTS — OPEN REGISTRATION ({tournaments.filter(t => t.status === 'registration').length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tournaments.filter(t => t.status === 'registration').map(t => (
+                  <TournamentCard key={t.id} tournament={t} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {tournaments.filter(t => t.status === 'active').length > 0 && (
+            <section className="mb-8">
+              <h2 className="pixel-font text-sm text-accent-green mb-4 flex items-center gap-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-accent-green animate-pulse" />
+                TOURNAMENTS — LIVE ({tournaments.filter(t => t.status === 'active').length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tournaments.filter(t => t.status === 'active').map(t => (
+                  <TournamentCard key={t.id} tournament={t} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {tournaments.filter(t => t.status === 'finished').length > 0 && (
+            <section className="mb-8">
+              <h2 className="pixel-font text-sm text-dark-muted mb-4">
+                &#127942; TOURNAMENTS — FINISHED ({tournaments.filter(t => t.status === 'finished').length})
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {tournaments.filter(t => t.status === 'finished').map(t => (
+                  <TournamentCard key={t.id} tournament={t} />
+                ))}
+              </div>
+            </section>
+          )}
+        </>
+      )}
+
+      {!loading && battles.length === 0 && tournaments.length === 0 && (
         <div className="text-center py-12">
           <p className="pixel-font text-sm text-dark-muted mb-4">
-            No battles yet...
+            No battles or tournaments yet...
           </p>
           <p className="text-dark-muted">
-            Be the first to create a battle!
+            Be the first to create one!
           </p>
         </div>
       )}
