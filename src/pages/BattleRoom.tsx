@@ -9,6 +9,7 @@ import ParticipantList from '../components/ParticipantList';
 import PasswordModal from '../components/PasswordModal';
 import ShareButton from '../components/ShareButton';
 import ReplayPlayer from '../components/ReplayPlayer';
+import EmbedModal from '../components/EmbedModal';
 
 export default function BattleRoom() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ export default function BattleRoom() {
   const [showPassword, setShowPassword] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [showReplay, setShowReplay] = useState(false);
+  const [showEmbed, setShowEmbed] = useState(false);
   const hasReplay = !!(battle?.scoreHistory && battle.scoreHistory.length >= 2);
 
   // Track previous battle state for attack animations
@@ -114,6 +116,14 @@ export default function BattleRoom() {
               &#127916; REPLAY
             </button>
           )}
+
+          {/* Embed button */}
+          <button
+            onClick={() => setShowEmbed(true)}
+            className="pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border px-3 py-2 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer flex items-center gap-2"
+          >
+            &lt;/&gt; EMBED
+          </button>
 
         {/* Join button */}
         {(battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) && (
@@ -228,6 +238,11 @@ export default function BattleRoom() {
           onCancel={() => { setShowPassword(false); setJoinError(null); }}
           error={joinError}
         />
+      )}
+
+      {/* Embed Modal */}
+      {showEmbed && id && (
+        <EmbedModal battleId={id} onClose={() => setShowEmbed(false)} />
       )}
     </div>
   );
