@@ -171,12 +171,13 @@ export const localStore = {
       const statsPromises = battle.participants.map(p =>
         fetchGitHubEvents(p.username, battle.startDate, battle.repos),
       );
-      const allStats = await Promise.all(statsPromises);
+      const allResults = await Promise.all(statsPromises);
 
       let maxScore = 0;
       for (let i = 0; i < battle.participants.length; i++) {
-        battle.participants[i].stats = allStats[i];
-        battle.participants[i].score = calculateScore(allStats[i], battle.scoring);
+        battle.participants[i].stats = allResults[i].stats;
+        battle.participants[i].heatmap = allResults[i].heatmap;
+        battle.participants[i].score = calculateScore(allResults[i].stats, battle.scoring);
         if (battle.participants[i].score > maxScore) {
           maxScore = battle.participants[i].score;
         }

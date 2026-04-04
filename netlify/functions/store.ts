@@ -20,6 +20,7 @@ export interface StoredBattle {
       reviews: number;
       comments: number;
     };
+    heatmap?: number[][];
     hp: number;
   }[];
   votes: Record<string, number>;

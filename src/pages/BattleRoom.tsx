@@ -10,6 +10,7 @@ import PasswordModal from '../components/PasswordModal';
 import ShareButton from '../components/ShareButton';
 import ReplayPlayer from '../components/ReplayPlayer';
 import EmbedModal from '../components/EmbedModal';
+import ActivityHeatmap from '../components/ActivityHeatmap';
 
 export default function BattleRoom() {
   const { id } = useParams<{ id: string }>();
@@ -176,6 +177,16 @@ export default function BattleRoom() {
           <TerritoryArena battle={battle} prevBattle={prevBattle} />
         )}
       </div>
+
+      {/* Activity Heatmap — collapsible */}
+      {battle.status !== 'waiting' && battle.participants.some(p => p.heatmap) && (
+        <div className="mb-6">
+          <ActivityHeatmap
+            participants={battle.participants}
+            participantIndices={new Map(battle.participants.map((p, i) => [p.username, i]))}
+          />
+        </div>
+      )}
 
       {/* Details Grid — stretch columns to equal height */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">

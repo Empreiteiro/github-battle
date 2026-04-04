@@ -42,7 +42,8 @@ export default async function handler(request: Request, _context: Context) {
       let maxScore = 0;
       for (let i = 0; i < battle.participants.length; i++) {
         const s = allStats[i];
-        battle.participants[i].stats = s;
+        battle.participants[i].stats = { commits: s.commits, pullRequests: s.pullRequests, pullRequestsMerged: s.pullRequestsMerged, issues: s.issues, reviews: s.reviews, comments: s.comments };
+        battle.participants[i].heatmap = s.heatmap;
         let score = 0;
         if (sc.enabled.commit) score += s.commits * sc.points.commit;
         if (sc.enabled.pr) score += s.pullRequests * sc.points.pr;

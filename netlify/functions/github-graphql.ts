@@ -12,6 +12,11 @@ interface ContributionStats {
   issues: number;
   reviews: number;
   comments: number;
+  heatmap: number[][]; // [dayOfWeek 0-6][hour 0-23]
+}
+
+function emptyHeatmap(): number[][] {
+  return Array.from({ length: 7 }, () => Array(24).fill(0));
 }
 
 export async function fetchStatsGraphQL(
@@ -107,6 +112,7 @@ export async function fetchStatsGraphQL(
       issues: contrib.totalIssueContributions,
       reviews: contrib.totalPullRequestReviewContributions,
       comments: restExtra.comments,
+      heatmap: restExtra.heatmap,
     };
   } catch (err) {
     console.error('GraphQL fetch failed:', err);
@@ -119,9 +125,10 @@ async function fetchCommentsAndMergedPRs(
   username: string,
   since: string,
   token: string,
-): Promise<{ mergedPRs: number; comments: number }> {
+): Promise<{ mergedPRs: number; comments: number; heatmap: number[][] }> {
   let mergedPRs = 0;
   let comments = 0;
+  const heatmap = emptyHeatmap();
   const sinceDate = new Date(since).getTime();
 
   try {
@@ -142,22 +149,27 @@ async function fetchCommentsAndMergedPRs(
       if (events.length === 0) break;
 
       for (const event of events) {
-        if (new Date(event.created_at).getTime() < sinceDate) {
+        const eventDate = new Date(event.created_at);
+        if (eventDate.getTime() < sinceDate) {
           done = true;
           break;
         }
+        const day = eventDate.getUTCDay();
+        const hour = eventDate.getUTCHours();
         if (event.type === 'PullRequestEvent' && event.payload?.pull_request?.merged) {
           mergedPRs++;
+          heatmap[day][hour]++;
         }
         if (['IssueCommentEvent', 'CommitCommentEvent', 'PullRequestReviewCommentEvent'].includes(event.type)) {
           comments++;
+          heatmap[day][hour]++;
         }
       }
       page++;
     }
   } catch { /* partial */ }
 
-  return { mergedPRs, comments };
+  return { mergedPRs, comments, heatmap };
 }
 
 // Fallback: REST Events API with optional repo filtering
@@ -174,6 +186,7 @@ async function fetchStatsREST(
     issues: 0,
     reviews: 0,
     comments: 0,
+    heatmap: emptyHeatmap(),
   };
 
   try {
@@ -196,7 +209,8 @@ async function fetchStatsREST(
       if (events.length === 0) break;
 
       for (const event of events) {
-        if (new Date(event.created_at).getTime() < sinceDate) {
+        const eventDate = new Date(event.created_at);
+        if (eventDate.getTime() < sinceDate) {
           done = true;
           break;
         }
@@ -204,26 +218,33 @@ async function fetchStatsREST(
         if (repoSet && event.repo?.name && !repoSet.has(event.repo.name.toLowerCase())) {
           continue;
         }
+        const day = eventDate.getUTCDay();
+        const hour = eventDate.getUTCHours();
+        let counted = false;
         switch (event.type) {
           case 'PushEvent':
             stats.commits += event.payload?.commits?.length || event.payload?.size || 1;
+            counted = true;
             break;
           case 'PullRequestEvent':
-            if (event.payload?.action === 'opened') stats.pullRequests++;
-            if (event.payload?.pull_request?.merged) stats.pullRequestsMerged++;
+            if (event.payload?.action === 'opened') { stats.pullRequests++; counted = true; }
+            if (event.payload?.pull_request?.merged) { stats.pullRequestsMerged++; counted = true; }
             break;
           case 'IssuesEvent':
-            if (event.payload?.action === 'opened') stats.issues++;
+            if (event.payload?.action === 'opened') { stats.issues++; counted = true; }
             break;
           case 'PullRequestReviewEvent':
             stats.reviews++;
+            counted = true;
             break;
           case 'IssueCommentEvent':
           case 'CommitCommentEvent':
           case 'PullRequestReviewCommentEvent':
             stats.comments++;
+            counted = true;
             break;
         }
+        if (counted) stats.heatmap[day][hour]++;
       }
       page++;
     }
