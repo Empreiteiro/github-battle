@@ -56,6 +56,7 @@ export interface Battle {
   votes: Record<string, number>;
   maxParticipants: number;
   scoring: ScoringConfig;
+  repos?: string[]; // e.g. ["owner/repo"] — empty = all repos
   scoreHistory?: ScoreSnapshot[];
   lastRefresh: string;
   createdAt: string;
@@ -70,6 +71,7 @@ export interface CreateBattleRequest {
   participants: string[];
   maxParticipants: number;
   scoring?: ScoringConfig;
+  repos?: string[];
 }
 
 export interface JoinBattleRequest {

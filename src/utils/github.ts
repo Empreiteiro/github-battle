@@ -3,6 +3,7 @@ import type { ParticipantStats } from '../types';
 interface GitHubEvent {
   type: string;
   created_at: string;
+  repo?: { name?: string };
   payload?: {
     action?: string;
     pull_request?: { merged?: boolean };
@@ -14,7 +15,9 @@ interface GitHubEvent {
 export async function fetchGitHubEvents(
   username: string,
   since: string,
+  repos?: string[],
 ): Promise<ParticipantStats> {
+  const repoSet = repos && repos.length > 0 ? new Set(repos.map(r => r.toLowerCase())) : null;
   const stats: ParticipantStats = {
     commits: 0,
     pullRequests: 0,
@@ -48,6 +51,11 @@ export async function fetchGitHubEvents(
         if (eventTime < sinceDate) {
           done = true;
           break;
+        }
+
+        // Skip events not in the allowed repos
+        if (repoSet && event.repo?.name && !repoSet.has(event.repo.name.toLowerCase())) {
+          continue;
         }
 
         switch (event.type) {

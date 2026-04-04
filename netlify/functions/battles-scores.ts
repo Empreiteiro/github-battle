@@ -30,7 +30,7 @@ export default async function handler(request: Request, _context: Context) {
     if (shouldRefresh && battle.status === 'active') {
       // Fetch all participant stats in parallel using GraphQL (falls back to REST)
       const statsPromises = battle.participants.map(p =>
-        fetchStatsGraphQL(p.username, battle.startDate, battle.endDate),
+        fetchStatsGraphQL(p.username, battle.startDate, battle.endDate, battle.repos),
       );
       const allStats = await Promise.all(statsPromises);
 
