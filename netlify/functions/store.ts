@@ -28,6 +28,7 @@ export interface StoredBattle {
     enabled: Record<string, boolean>;
     points: Record<string, number>;
   };
+  scoreHistory?: { timestamp: string; scores: Record<string, number> }[];
   lastRefresh: string;
   createdAt: string;
 }

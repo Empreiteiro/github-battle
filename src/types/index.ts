@@ -39,6 +39,11 @@ export const SCORING_LABELS: Record<ScoringKey, string> = {
   comment: 'Comments',
 };
 
+export interface ScoreSnapshot {
+  timestamp: string;
+  scores: Record<string, number>; // username -> score
+}
+
 export interface Battle {
   id: string;
   name: string;
@@ -51,6 +56,7 @@ export interface Battle {
   votes: Record<string, number>;
   maxParticipants: number;
   scoring: ScoringConfig;
+  scoreHistory?: ScoreSnapshot[];
   lastRefresh: string;
   createdAt: string;
 }

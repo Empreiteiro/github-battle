@@ -185,6 +185,14 @@ export const localStore = {
         p.hp = calculateHP(p.score, maxScore);
       }
 
+      // Record score snapshot for replay
+      const snapshot: Record<string, number> = {};
+      for (const p of battle.participants) {
+        snapshot[p.username] = p.score;
+      }
+      if (!battle.scoreHistory) battle.scoreHistory = [];
+      battle.scoreHistory.push({ timestamp: new Date().toISOString(), scores: snapshot });
+
       battle.lastRefresh = new Date().toISOString();
     }
 
