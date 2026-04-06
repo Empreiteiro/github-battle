@@ -55,22 +55,18 @@ export default function BattleCard({ battle }: Props) {
       {battle.participants.length >= 1 && (
         <div className="mt-auto pt-3 text-center">
           {battle.status === 'waiting' ? (
-            <span className="pixel-font text-[10px] text-accent-orange">
+            <span className="pixel-font text-[10px] text-accent-orange truncate block">
               {battle.participants[0]?.username} awaits a challenger!
             </span>
           ) : battle.participants.length === 2 ? (
-            <div className="flex items-center gap-2">
-              <div className="flex-1 text-right">
-                <span className="pixel-font text-[10px] text-accent-green">
-                  {battle.participants[0]?.username}
-                </span>
-              </div>
-              <span className="pixel-font text-[10px] text-accent-red">VS</span>
-              <div className="flex-1">
-                <span className="pixel-font text-[10px] text-accent-purple">
-                  {battle.participants[1]?.username}
-                </span>
-              </div>
+            <div className="flex items-center gap-1 min-w-0">
+              <span className="pixel-font text-[10px] text-accent-green truncate flex-1 text-right">
+                {battle.participants[0]?.username}
+              </span>
+              <span className="pixel-font text-[10px] text-accent-red flex-shrink-0">VS</span>
+              <span className="pixel-font text-[10px] text-accent-purple truncate flex-1">
+                {battle.participants[1]?.username}
+              </span>
             </div>
           ) : (
             <span className="pixel-font text-[10px] text-dark-muted">
