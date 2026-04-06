@@ -12,7 +12,7 @@ import ReplayPlayer from '../components/ReplayPlayer';
 import EmbedModal from '../components/EmbedModal';
 import ActivityHeatmap from '../components/ActivityHeatmap';
 import { useAuth } from '../auth/AuthContext';
-import { isCreator, getCreatorId } from '../utils/identity';
+import { canManageBattle, getCreatorId } from '../utils/identity';
 import { api } from '../utils/api';
 
 export default function BattleRoom() {
@@ -152,7 +152,7 @@ export default function BattleRoom() {
             ) : null}
 
             {/* Delete — only for battle creator */}
-            {isCreator(battle.createdBy) && (
+            {canManageBattle(battle.createdBy) && (
               <button
                 onClick={async () => {
                   if (!confirm('Delete this battle permanently?')) return;

@@ -1,6 +1,8 @@
 import type { Context } from '@netlify/functions';
 import { getBattle, deleteBattle } from './store.js';
 
+const MODERATORS = ['Empreiteiro'];
+
 export default async function handler(request: Request, _context: Context) {
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
@@ -18,14 +20,11 @@ export default async function handler(request: Request, _context: Context) {
       return new Response(JSON.stringify({ error: 'Battle not found' }), { status: 404 });
     }
 
-    // Verify ownership: createdBy must match (GitHub username or browser ID)
-    if (battle.createdBy && battle.createdBy !== createdBy) {
-      return new Response(JSON.stringify({ error: 'Not authorized to delete this battle' }), { status: 403 });
-    }
+    const isMod = MODERATORS.includes(createdBy);
+    const isOwner = battle.createdBy && battle.createdBy === createdBy;
 
-    // If no createdBy was stored on the battle (legacy), deny deletion
-    if (!battle.createdBy) {
-      return new Response(JSON.stringify({ error: 'Cannot determine battle owner' }), { status: 403 });
+    if (!isMod && !isOwner) {
+      return new Response(JSON.stringify({ error: 'Not authorized to delete this battle' }), { status: 403 });
     }
 
     await deleteBattle(id);

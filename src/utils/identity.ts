@@ -28,6 +28,26 @@ export function getCreatorId(): string {
   return getBrowserId();
 }
 
+// Hardcoded moderators — can delete any battle
+const MODERATORS = ['Empreiteiro'];
+
+export function isModerator(): boolean {
+  try {
+    const auth = localStorage.getItem('github-battle-auth');
+    if (auth) {
+      const user = JSON.parse(auth);
+      if (user.username && MODERATORS.includes(user.username)) return true;
+    }
+  } catch { /* not a moderator */ }
+  return false;
+}
+
+// Check if the current user can manage a battle (creator or moderator)
+export function canManageBattle(creatorId: string | undefined): boolean {
+  if (isModerator()) return true;
+  return isCreator(creatorId);
+}
+
 // Check if the current user (logged in or browser) matches a creator ID
 export function isCreator(creatorId: string | undefined): boolean {
   if (!creatorId) return false;
