@@ -104,6 +104,7 @@ export const localStore = {
       maxParticipants: data.maxParticipants || 10,
       scoring: data.scoring || DEFAULT_SCORING,
       repos: data.repos && data.repos.length > 0 ? data.repos : undefined,
+      createdBy: data.createdBy,
       lastRefresh: startDate, // force immediate refresh on first load
       createdAt: now.toISOString(),
     };
@@ -147,6 +148,15 @@ export const localStore = {
 
     save(battle);
     return battle;
+  },
+
+  async deleteBattle(id: string, createdBy: string): Promise<{ success: boolean }> {
+    const battle = await localStore.getBattle(id);
+    if (battle.createdBy !== createdBy) throw new Error('Not authorized');
+    const all = readAll();
+    delete all[id];
+    writeAll(all);
+    return { success: true };
   },
 
   async leaveBattle(id: string, username: string): Promise<Battle> {

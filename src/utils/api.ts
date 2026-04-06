@@ -102,6 +102,12 @@ export const api = {
       () => localStore.leaveBattle(id, username),
     ),
 
+  deleteBattle: (id: string, createdBy: string) =>
+    withFallback(
+      () => request<{ success: boolean }>('/battles-delete', { method: 'POST', body: JSON.stringify({ id, createdBy }) }),
+      () => localStore.deleteBattle(id, createdBy),
+    ),
+
   // Tournaments
   listTournaments: () =>
     withFallback(

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { BattleInterval, ScoringConfig, ScoringKey, TournamentSize } from '../types';
 import { INTERVAL_LABELS, DEFAULT_SCORING, SCORING_LABELS } from '../types';
 import { api } from '../utils/api';
+import { getCreatorId } from '../utils/identity';
 import RepoFilter from '../components/RepoFilter';
 
 type Mode = 'battle' | 'tournament';
@@ -79,6 +80,7 @@ export default function Create() {
           customStart: new Date(customStart).toISOString(), customEnd: new Date(customEnd).toISOString(),
           participants: validP, maxParticipants, scoring,
           repos: repos.length > 0 ? repos : undefined,
+          createdBy: getCreatorId(),
         });
         navigate(`/battle/${battle.id}`);
       } catch (err) { setError(err instanceof Error ? err.message : 'Error creating battle'); }

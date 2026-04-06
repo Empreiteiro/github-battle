@@ -30,6 +30,7 @@ export interface StoredBattle {
     points: Record<string, number>;
   };
   repos?: string[];
+  createdBy?: string;
   scoreHistory?: { timestamp: string; scores: Record<string, number> }[];
   lastRefresh: string;
   createdAt: string;
@@ -67,6 +68,11 @@ export async function getBattle(id: string): Promise<StoredBattle | null> {
 export async function saveBattle(battle: StoredBattle): Promise<void> {
   const store = getBattleStore();
   await store.setJSON(battle.id, battle);
+}
+
+export async function deleteBattle(id: string): Promise<void> {
+  const store = getBattleStore();
+  await store.delete(id);
 }
 
 export function sanitizeBattle(battle: StoredBattle): StoredBattle & { hasPassword: boolean } {

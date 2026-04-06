@@ -63,6 +63,7 @@ export interface Battle {
   repos?: string[];
   tournamentId?: string;
   scoreHistory?: ScoreSnapshot[];
+  createdBy?: string; // GitHub username or browser ID
   lastRefresh: string;
   createdAt: string;
 }
@@ -77,6 +78,7 @@ export interface CreateBattleRequest {
   maxParticipants: number;
   scoring?: ScoringConfig;
   repos?: string[];
+  createdBy?: string;
 }
 
 export interface JoinBattleRequest {

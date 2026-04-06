@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useBattlePolling } from '../hooks/useBattle';
 import type { Battle } from '../types';
 import { INTERVAL_LABELS } from '../types';
@@ -12,9 +12,12 @@ import ReplayPlayer from '../components/ReplayPlayer';
 import EmbedModal from '../components/EmbedModal';
 import ActivityHeatmap from '../components/ActivityHeatmap';
 import { useAuth } from '../auth/AuthContext';
+import { isCreator, getCreatorId } from '../utils/identity';
+import { api } from '../utils/api';
 
 export default function BattleRoom() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { battle, loading, error, vote, join, leave } = useBattlePolling(id);
   const { user } = useAuth();
   const [prevBattle, setPrevBattle] = useState<Battle | null>(null);
@@ -105,14 +108,14 @@ export default function BattleRoom() {
 
         <div className="flex flex-col items-end gap-2">
           {/* Action buttons — equal width */}
-          <div className="grid grid-cols-4 gap-2 w-full max-w-[520px]">
+          <div className="flex flex-wrap gap-2 w-full max-w-[520px] justify-end">
             <ShareButton battle={battle} />
 
             {/* Replay toggle */}
             <button
               onClick={() => hasReplay && setShowReplay(!showReplay)}
               disabled={!hasReplay}
-              className={`pixel-font text-[10px] py-2 rounded border transition-colors cursor-pointer text-center ${
+              className={`pixel-font text-[10px] py-2 px-4 rounded border transition-colors cursor-pointer text-center min-w-[80px] ${
                 !hasReplay
                   ? 'bg-dark-bg text-dark-muted/40 border-dark-border/50 cursor-not-allowed'
                   : showReplay
@@ -126,7 +129,7 @@ export default function BattleRoom() {
             {/* Embed button */}
             <button
               onClick={() => setShowEmbed(true)}
-              className="pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border py-2 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer text-center"
+              className="pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border py-2 px-4 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer text-center min-w-[80px]"
             >
               EMBED
             </button>
@@ -135,19 +138,35 @@ export default function BattleRoom() {
             {user && battle.participants.some(p => p.username === user.username) && battle.status !== 'finished' ? (
               <button
                 onClick={() => leave(user.username)}
-                className="pixel-font text-[10px] bg-accent-red/20 text-accent-red border border-accent-red/50 py-2 rounded hover:bg-accent-red/30 transition-colors cursor-pointer text-center"
+                className="pixel-font text-[10px] bg-accent-red/20 text-accent-red border border-accent-red/50 py-2 px-4 rounded hover:bg-accent-red/30 transition-colors cursor-pointer text-center min-w-[80px]"
               >
                 LEAVE
               </button>
             ) : (battle.status === 'active' || battle.status === 'waiting') && battle.participants.length < (battle.maxParticipants || 10) ? (
               <button
                 onClick={() => showJoin ? handleJoinClick() : setShowJoin(true)}
-                className="pixel-font text-[10px] bg-accent-blue/20 text-accent-blue border border-accent-blue/50 py-2 rounded hover:bg-accent-blue/30 transition-colors cursor-pointer text-center"
+                className="pixel-font text-[10px] bg-accent-blue/20 text-accent-blue border border-accent-blue/50 py-2 px-4 rounded hover:bg-accent-blue/30 transition-colors cursor-pointer text-center min-w-[80px]"
               >
                 + JOIN
               </button>
-            ) : (
-              <div />
+            ) : null}
+
+            {/* Delete — only for battle creator */}
+            {isCreator(battle.createdBy) && (
+              <button
+                onClick={async () => {
+                  if (!confirm('Delete this battle permanently?')) return;
+                  try {
+                    await api.deleteBattle(battle.id, getCreatorId());
+                    navigate('/');
+                  } catch (err) {
+                    alert(err instanceof Error ? err.message : 'Failed to delete');
+                  }
+                }}
+                className="pixel-font text-[10px] bg-accent-red/10 text-accent-red/70 border border-accent-red/30 py-2 px-4 rounded hover:bg-accent-red/20 hover:text-accent-red transition-colors cursor-pointer text-center min-w-[80px]"
+              >
+                DELETE
+              </button>
             )}
           </div>
 

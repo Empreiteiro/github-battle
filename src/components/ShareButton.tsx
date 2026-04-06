@@ -50,7 +50,7 @@ export default function ShareButton({ battle }: Props) {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border py-2 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer text-center"
+        className="pixel-font text-[10px] bg-dark-bg text-dark-muted border border-dark-border py-2 px-4 rounded hover:bg-dark-border/50 hover:text-dark-text transition-colors cursor-pointer text-center min-w-[80px]"
       >
         SHARE
       </button>
