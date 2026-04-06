@@ -18,7 +18,7 @@ export default function BattleCard({ battle }: Props) {
   return (
     <Link
       to={`/battle/${battle.id}`}
-      className="block pixel-border bg-dark-card p-4 rounded-lg hover:bg-dark-card/80 transition-colors no-underline"
+      className="flex flex-col pixel-border bg-dark-card p-4 rounded-lg hover:bg-dark-card/80 transition-colors no-underline h-full"
     >
       <div className="flex items-start justify-between mb-3">
         <h3 className="pixel-font text-xs text-accent-blue m-0 leading-relaxed">
@@ -53,7 +53,7 @@ export default function BattleCard({ battle }: Props) {
       </div>
 
       {battle.participants.length >= 1 && (
-        <div className="mt-3 text-center">
+        <div className="mt-auto pt-3 text-center">
           {battle.status === 'waiting' ? (
             <span className="pixel-font text-[10px] text-accent-orange">
               {battle.participants[0]?.username} awaits a challenger!

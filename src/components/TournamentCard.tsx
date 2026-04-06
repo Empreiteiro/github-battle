@@ -26,7 +26,7 @@ export default function TournamentCard({ tournament }: Props) {
   return (
     <Link
       to={`/tournament/${tournament.id}`}
-      className="block pixel-border bg-dark-card p-4 rounded-lg hover:bg-dark-card/80 transition-colors no-underline"
+      className="flex flex-col pixel-border bg-dark-card p-4 rounded-lg hover:bg-dark-card/80 transition-colors no-underline h-full"
     >
       <div className="flex items-start justify-between mb-3">
         <h3 className="pixel-font text-xs text-accent-purple m-0 leading-relaxed">
@@ -39,12 +39,12 @@ export default function TournamentCard({ tournament }: Props) {
 
       <div className="flex items-center gap-2 mb-3">
         <div className="flex -space-x-2">
-          {tournament.participants.slice(0, 6).map(username => (
+          {tournament.participants.slice(0, 5).map(username => (
             <img
               key={username}
               src={tournament.participantAvatars[username] || `https://github.com/${username}.png`}
               alt={username}
-              className="w-7 h-7 rounded-full border-2 border-dark-card"
+              className="w-8 h-8 rounded-full border-2 border-dark-card"
             />
           ))}
         </div>
@@ -58,6 +58,22 @@ export default function TournamentCard({ tournament }: Props) {
         <span>{roundLabel}</span>
         {tournament.champion && (
           <span className="text-accent-yellow">&#127942; {tournament.champion}</span>
+        )}
+      </div>
+
+      <div className="mt-auto pt-3 text-center">
+        {tournament.status === 'registration' ? (
+          <span className="pixel-font text-[10px] text-accent-yellow">
+            {tournament.size - tournament.participants.length} slot{tournament.size - tournament.participants.length !== 1 ? 's' : ''} remaining
+          </span>
+        ) : tournament.champion ? (
+          <span className="pixel-font text-[10px] text-accent-yellow">
+            &#127942; Champion: {tournament.champion}
+          </span>
+        ) : (
+          <span className="pixel-font text-[10px] text-dark-muted">
+            {tournament.size}-player tournament
+          </span>
         )}
       </div>
     </Link>
