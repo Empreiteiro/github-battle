@@ -32,6 +32,15 @@ function ensureBackendProbe(): Promise<boolean> {
   return backendProbe;
 }
 
+function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  try {
+    const token = localStorage.getItem('github-battle-token');
+    if (token) headers['Authorization'] = `token ${token}`;
+  } catch { /* no token */ }
+  return headers;
+}
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${url}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -98,13 +107,21 @@ export const api = {
 
   leaveBattle: (id: string, username: string) =>
     withFallback(
-      () => request<Battle>('/battles-leave', { method: 'POST', body: JSON.stringify({ id, username }) }),
+      () => request<Battle>('/battles-leave', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id, username }),
+      }),
       () => localStore.leaveBattle(id, username),
     ),
 
   deleteBattle: (id: string, createdBy: string) =>
     withFallback(
-      () => request<{ success: boolean }>('/battles-delete', { method: 'POST', body: JSON.stringify({ id, createdBy }) }),
+      () => request<{ success: boolean }>('/battles-delete', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id, createdBy }),
+      }),
       () => localStore.deleteBattle(id, createdBy),
     ),
 

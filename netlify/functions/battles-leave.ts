@@ -1,5 +1,6 @@
 import type { Context } from '@netlify/functions';
 import { getBattle, saveBattle, sanitizeBattle } from './store.js';
+import { verifyGitHubToken } from './verify-token.js';
 
 export default async function handler(request: Request, _context: Context) {
   if (request.method !== 'POST') {
@@ -13,6 +14,14 @@ export default async function handler(request: Request, _context: Context) {
       return new Response(JSON.stringify({ error: 'Missing id or username' }), { status: 400 });
     }
 
+    // Verify the caller is actually this user via OAuth token
+    const authHeader = request.headers.get('Authorization');
+    const verifiedUsername = await verifyGitHubToken(authHeader);
+
+    if (verifiedUsername && verifiedUsername !== username) {
+      return new Response(JSON.stringify({ error: 'Token does not match username' }), { status: 403 });
+    }
+
     const battle = await getBattle(id);
     if (!battle) {
       return new Response(JSON.stringify({ error: 'Battle not found' }), { status: 404 });
@@ -24,11 +33,8 @@ export default async function handler(request: Request, _context: Context) {
     }
 
     battle.participants.splice(idx, 1);
-
-    // Remove votes for this participant
     delete battle.votes[username];
 
-    // If no participants left, or battle was waiting and now empty
     if (battle.participants.length === 0) {
       battle.status = 'finished';
     } else if (battle.participants.length < 2 && battle.status === 'active') {
