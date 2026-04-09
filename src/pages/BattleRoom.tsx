@@ -28,8 +28,10 @@ export default function BattleRoom() {
   const [showPassword, setShowPassword] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
   const [showReplay, setShowReplay] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
   const hasReplay = !!(battle?.scoreHistory && battle.scoreHistory.length >= 2);
+  const hasHeatmap = !!(battle?.status !== 'waiting' && battle?.participants.some(p => p.heatmap));
 
   // Track previous battle state for attack animations
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function BattleRoom() {
 
             {/* Replay toggle */}
             <button
-              onClick={() => hasReplay && setShowReplay(!showReplay)}
+              onClick={() => { if (hasReplay) { setShowReplay(!showReplay); setShowHeatmap(false); } }}
               disabled={!hasReplay}
               className={`pixel-font text-[10px] py-2 px-4 rounded border transition-colors cursor-pointer text-center min-w-[80px] ${
                 !hasReplay
@@ -124,6 +126,21 @@ export default function BattleRoom() {
               }`}
             >
               REPLAY
+            </button>
+
+            {/* Heatmap toggle */}
+            <button
+              onClick={() => { if (hasHeatmap) { setShowHeatmap(!showHeatmap); setShowReplay(false); } }}
+              disabled={!hasHeatmap}
+              className={`pixel-font text-[10px] py-2 px-4 rounded border transition-colors cursor-pointer text-center min-w-[80px] ${
+                !hasHeatmap
+                  ? 'bg-dark-bg text-dark-muted/40 border-dark-border/50 cursor-not-allowed'
+                  : showHeatmap
+                    ? 'bg-accent-orange/20 text-accent-orange border-accent-orange/50'
+                    : 'bg-dark-bg text-dark-muted border-dark-border hover:bg-dark-border/50 hover:text-dark-text'
+              }`}
+            >
+              HEATMAP
             </button>
 
             {/* Embed button */}
@@ -202,24 +219,19 @@ export default function BattleRoom() {
         <p className="text-accent-red text-xs mb-4">{joinError}</p>
       )}
 
-      {/* Territory Arena or Replay — full width, swappable */}
+      {/* Territory Arena / Replay / Heatmap — full width, swappable */}
       <div className="mb-6">
         {showReplay && hasReplay ? (
           <ReplayPlayer battle={battle} />
-        ) : (
-          <TerritoryArena battle={battle} prevBattle={prevBattle} />
-        )}
-      </div>
-
-      {/* Activity Heatmap — collapsible */}
-      {battle.status !== 'waiting' && battle.participants.some(p => p.heatmap) && (
-        <div className="mb-6">
+        ) : showHeatmap && hasHeatmap ? (
           <ActivityHeatmap
             participants={battle.participants}
             participantIndices={new Map(battle.participants.map((p, i) => [p.username, i]))}
           />
-        </div>
-      )}
+        ) : (
+          <TerritoryArena battle={battle} prevBattle={prevBattle} />
+        )}
+      </div>
 
       {/* Details Grid — stretch columns to equal height */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
