@@ -23,3 +23,17 @@ dist-ssr
 *.sln
 *.sw?
 .netlify/
+
+# Capacitor / Android
+android/.gradle/
+android/.idea/
+android/app/build/
+android/build/
+android/captures/
+android/local.properties
+android/app/release/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+*.keystore
+!android/app/debug.keystore
