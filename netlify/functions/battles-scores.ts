@@ -1,6 +1,7 @@
 import type { Context } from '@netlify/functions';
 import { getBattle, saveBattle, sanitizeBattle } from './store.js';
 import { fetchStatsGraphQL } from './github-graphql.js';
+import { onBattleFinished } from './leaderboard-update.js';
 
 export default async function handler(request: Request, _context: Context) {
   const url = new URL(request.url);
@@ -18,8 +19,19 @@ export default async function handler(request: Request, _context: Context) {
 
     // Check if battle has ended
     const now = new Date();
+    let newBadges: Record<string, string[]> | undefined;
     if (now > new Date(battle.endDate) && battle.status === 'active') {
       battle.status = 'finished';
+      // Update leaderboard + evaluate badges (once)
+      if (!battle.leaderboardUpdated) {
+        try {
+          newBadges = await onBattleFinished(battle);
+          battle.leaderboardUpdated = true;
+          await saveBattle(battle);
+        } catch {
+          // Don't fail the score refresh if leaderboard update fails
+        }
+      }
     }
 
     // Cache: only refresh if 60+ seconds since last refresh
@@ -72,7 +84,8 @@ export default async function handler(request: Request, _context: Context) {
       await saveBattle(battle);
     }
 
-    return new Response(JSON.stringify(sanitizeBattle(battle)), {
+    const response = { ...sanitizeBattle(battle), ...(newBadges && Object.keys(newBadges).length > 0 ? { newBadges } : {}) };
+    return new Response(JSON.stringify(response), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch {

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useBattlePolling } from '../hooks/useBattle';
-import type { Battle } from '../types';
+import type { Battle, BadgeDefinition } from '../types';
 import { INTERVAL_LABELS } from '../types';
 import TerritoryArena from '../components/TerritoryArena';
 import VotePanel from '../components/VotePanel';
@@ -11,9 +11,11 @@ import ShareButton from '../components/ShareButton';
 import ReplayPlayer from '../components/ReplayPlayer';
 import EmbedModal from '../components/EmbedModal';
 import ActivityHeatmap from '../components/ActivityHeatmap';
+import BadgeToast from '../components/BadgeToast';
 import { useAuth } from '../auth/AuthContext';
 import { canManageBattle, getCreatorId } from '../utils/identity';
 import { api } from '../utils/api';
+import { BADGE_MAP } from '../data/badges';
 
 export default function BattleRoom() {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +32,7 @@ export default function BattleRoom() {
   const [showReplay, setShowReplay] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showEmbed, setShowEmbed] = useState(false);
+  const [earnedBadges, setEarnedBadges] = useState<BadgeDefinition[]>([]);
   const hasReplay = !!(battle?.scoreHistory && battle.scoreHistory.length >= 2);
   const hasHeatmap = !!(battle?.status !== 'waiting' && battle?.participants.some(p => p.heatmap));
 
@@ -40,6 +43,19 @@ export default function BattleRoom() {
     }
     prevRef.current = battle;
   }, [battle]);
+
+  // Show badge toast when battle finishes with new badges for the current user
+  useEffect(() => {
+    if (battle?.newBadges && user) {
+      const myBadgeIds = battle.newBadges[user.username];
+      if (myBadgeIds?.length) {
+        const defs = myBadgeIds
+          .map(id => BADGE_MAP[id as keyof typeof BADGE_MAP])
+          .filter(Boolean);
+        if (defs.length > 0) setEarnedBadges(defs);
+      }
+    }
+  }, [battle?.newBadges, user]);
 
   const handleJoin = async (password?: string) => {
     if (!joinUsername.trim()) {
@@ -309,6 +325,11 @@ export default function BattleRoom() {
       {/* Embed Modal */}
       {showEmbed && id && (
         <EmbedModal battleId={id} onClose={() => setShowEmbed(false)} />
+      )}
+
+      {/* Badge Toast */}
+      {earnedBadges.length > 0 && (
+        <BadgeToast badges={earnedBadges} onDismiss={() => setEarnedBadges([])} />
       )}
     </div>
   );

@@ -34,6 +34,7 @@ export interface StoredBattle {
   scoreHistory?: { timestamp: string; scores: Record<string, number> }[];
   lastRefresh: string;
   createdAt: string;
+  leaderboardUpdated?: boolean;
 }
 
 function getBattleStore() {

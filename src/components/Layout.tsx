@@ -17,6 +17,19 @@ export default function Layout() {
 
           <div className="flex items-center gap-3">
             <Link
+              to="/leaderboard"
+              className="pixel-font text-[10px] text-dark-muted hover:text-accent-yellow transition-colors no-underline hidden md:inline"
+            >
+              &#127942; Leaderboard
+            </Link>
+            <Link
+              to="/leaderboard"
+              className="pixel-font text-[10px] text-dark-muted hover:text-accent-yellow transition-colors no-underline md:hidden"
+              title="Leaderboard"
+            >
+              &#127942;
+            </Link>
+            <Link
               to="/create"
               className="pixel-font text-[10px] bg-accent-green/20 text-accent-green border border-accent-green/50 px-4 py-2 rounded hover:bg-accent-green/30 transition-colors no-underline text-center"
             >

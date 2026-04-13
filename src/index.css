@@ -62,10 +62,16 @@ body {
   50% { box-shadow: 0 0 20px var(--color-accent-green), 0 0 40px var(--color-accent-green); }
 }
 
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .animate-shake { animation: shake 0.3s ease-in-out; }
 .animate-flash-red { animation: flash-red 0.3s ease-in-out; }
 .animate-float-up { animation: float-up 1s ease-out forwards; }
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-slide-up { animation: slide-up 0.4s ease-out; }
 
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--color-dark-bg); }

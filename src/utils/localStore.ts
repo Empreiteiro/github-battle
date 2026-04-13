@@ -1,4 +1,4 @@
-import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest, Tournament, CreateTournamentRequest, TournamentRound } from '../types';
+import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest, Tournament, CreateTournamentRequest, TournamentRound, LeaderboardEntry, LeaderboardTimeFilter, EarnedBadge } from '../types';
 import { DEFAULT_SCORING } from '../types';
 import { fetchGitHubEvents } from './github';
 import { calculateScore, calculateHP } from './scoring';
@@ -294,5 +294,14 @@ export const localStore = {
     all[id] = t;
     localStorage.setItem('github-battle-tournaments', JSON.stringify(all));
     return t;
+  },
+
+  // Leaderboard & Badges (local stubs — return empty data)
+  async getLeaderboard(_filter: LeaderboardTimeFilter): Promise<LeaderboardEntry[]> {
+    return [];
+  },
+
+  async getPlayerBadges(username: string): Promise<{ username: string; badges: EarnedBadge[] }> {
+    return { username, badges: [] };
   },
 };

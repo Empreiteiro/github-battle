@@ -66,6 +66,7 @@ export interface Battle {
   createdBy?: string; // GitHub username or browser ID
   lastRefresh: string;
   createdAt: string;
+  newBadges?: Record<string, string[]>;
 }
 
 export interface CreateBattleRequest {
@@ -164,3 +165,77 @@ export const ROUND_NAMES: Record<number, Record<number, string>> = {
   8: { 1: 'Quarterfinals', 2: 'Semifinals', 3: 'Final' },
   16: { 1: 'Round of 16', 2: 'Quarterfinals', 3: 'Semifinals', 4: 'Final' },
 };
+
+// --- Leaderboard & Badges ---
+
+export type BadgeId =
+  | 'first_blood'
+  | 'champion'
+  | 'underdog'
+  | 'on_fire'
+  | 'dominator'
+  | 'flawless'
+  | 'challenger'
+  | 'social_butterfly'
+  | 'committer'
+  | 'pr_machine'
+  | 'reviewer'
+  | 'sniper'
+  | 'arena_master';
+
+export interface BadgeDefinition {
+  id: BadgeId;
+  name: string;
+  description: string;
+  icon: string;
+  category: 'wins' | 'activity' | 'streaks' | 'special';
+}
+
+export interface EarnedBadge {
+  badgeId: BadgeId;
+  earnedAt: string;
+  battleId: string;
+}
+
+export interface BattleHistoryEntry {
+  battleId: string;
+  date: string;
+  score: number;
+  won: boolean;
+  opponentCount: number;
+}
+
+export interface PlayerRecord {
+  username: string;
+  avatarUrl: string;
+  wins: number;
+  losses: number;
+  draws: number;
+  battlesPlayed: number;
+  totalScore: number;
+  highestScore: number;
+  totalCommits: number;
+  totalPRs: number;
+  totalReviews: number;
+  battlesCreated: number;
+  currentWinStreak: number;
+  longestWinStreak: number;
+  uniqueOpponents: string[];
+  badges: EarnedBadge[];
+  battleHistory: BattleHistoryEntry[];
+  lastUpdated: string;
+}
+
+export interface LeaderboardEntry {
+  username: string;
+  avatarUrl: string;
+  wins: number;
+  losses: number;
+  battlesPlayed: number;
+  totalScore: number;
+  highestScore: number;
+  winRate: number;
+  badges: EarnedBadge[];
+}
+
+export type LeaderboardTimeFilter = 'all-time' | 'month' | 'week';

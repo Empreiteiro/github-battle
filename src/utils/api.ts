@@ -1,4 +1,4 @@
-import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest, Tournament, CreateTournamentRequest } from '../types';
+import type { Battle, CreateBattleRequest, JoinBattleRequest, VoteRequest, Tournament, CreateTournamentRequest, LeaderboardEntry, LeaderboardTimeFilter, EarnedBadge } from '../types';
 import { localStore } from './localStore';
 
 const BASE = '/api';
@@ -148,5 +148,18 @@ export const api = {
     withFallback(
       () => request<Tournament>('/tournaments-join', { method: 'POST', body: JSON.stringify({ id, username }) }),
       () => localStore.joinTournament(id, username),
+    ),
+
+  // Leaderboard & Badges
+  getLeaderboard: (filter: LeaderboardTimeFilter = 'all-time') =>
+    withFallback(
+      () => request<LeaderboardEntry[]>(`/leaderboard-get?filter=${filter}`),
+      () => localStore.getLeaderboard(filter),
+    ),
+
+  getPlayerBadges: (username: string) =>
+    withFallback(
+      () => request<{ username: string; badges: EarnedBadge[] }>(`/badges-get?username=${username}`),
+      () => localStore.getPlayerBadges(username),
     ),
 };

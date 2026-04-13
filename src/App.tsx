@@ -6,6 +6,8 @@ import Create from './pages/Create';
 import BattleRoom from './pages/BattleRoom';
 import Embed from './pages/Embed';
 import TournamentView from './pages/TournamentView';
+import Leaderboard from './pages/Leaderboard';
+import Badges from './pages/Badges';
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
             <Route path="/create-tournament" element={<Navigate to="/create" replace />} />
             <Route path="/battle/:id" element={<BattleRoom />} />
             <Route path="/tournament/:id" element={<TournamentView />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/badges" element={<Badges />} />
           </Route>
         </Routes>
       </BrowserRouter>
