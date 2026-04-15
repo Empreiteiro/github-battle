@@ -10,7 +10,7 @@ interface Props {
   battle: Battle;
 }
 
-type Speed = 1 | 2 | 5;
+type Speed = 1 | 2 | 5 | 10 | 20;
 
 function buildGridFromScores(
   participants: Battle['participants'],
@@ -210,7 +210,7 @@ export default function ReplayPlayer({ battle }: Props) {
 
           {/* Speed selector */}
           <div className="flex items-center gap-1 ml-4">
-            {([1, 2, 5] as Speed[]).map(s => (
+            {([1, 2, 5, 10, 20] as Speed[]).map(s => (
               <button
                 key={s}
                 onClick={() => setSpeed(s)}
