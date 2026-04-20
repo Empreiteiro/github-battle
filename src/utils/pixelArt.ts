@@ -160,6 +160,69 @@ export function getParticipantColor(index: number): string {
 
 export const TOTAL_COLORS = TERRITORY_PALETTE.length;
 
+// Base hex per team-color token (mirrors src/types/index.ts TEAM_COLORS)
+const TEAM_BASE_HEX: Record<string, string> = {
+  green: '#39d353',
+  blue: '#58a6ff',
+  purple: '#bc8cff',
+  orange: '#d29922',
+  red: '#f85149',
+  yellow: '#e3b341',
+};
+
+function hexToHsl(hex: string): [number, number, number] {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h *= 60;
+  }
+  return [h, s * 100, l * 100];
+}
+
+function hslCssString(h: number, s: number, l: number): string {
+  const [r, g, b] = hslToRgb(((h % 360) + 360) % 360, Math.max(0, Math.min(100, s)), Math.max(0, Math.min(100, l)));
+  const toHex = (v: number) => v.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// Small hue/lightness offsets so team members stay visibly in the same color
+// family but remain individually distinguishable. First member uses the base,
+// subsequent members alternate lighter/darker with a subtle hue drift.
+const TEAM_MEMBER_OFFSETS: { dh: number; dl: number }[] = [
+  { dh: 0,   dl: 0 },
+  { dh: -8,  dl: 12 },   // lighter, slightly cooler
+  { dh: 8,   dl: -12 },  // darker, slightly warmer
+  { dh: -14, dl: 20 },   // much lighter
+  { dh: 14,  dl: -20 },  // much darker
+  { dh: -20, dl: 6 },
+  { dh: 20,  dl: -6 },
+];
+
+/**
+ * Returns the territory color for a participant given their team membership.
+ * All members of the same team get shades of that team's base color, so they
+ * read as a single cohort on the map.
+ */
+export function getTeamMemberColor(teamColor: string | undefined, memberIndex: number): string {
+  const base = TEAM_BASE_HEX[teamColor || 'green'] || TEAM_BASE_HEX.green;
+  const [h, s, l] = hexToHsl(base);
+  const offset = TEAM_MEMBER_OFFSETS[memberIndex % TEAM_MEMBER_OFFSETS.length];
+  return hslCssString(h + offset.dh, s, l + offset.dl);
+}
+
 // Returns 4 intensity levels for a base hex color (like GitHub's contribution levels)
 export function getIntensityLevels(hex: string): string[] {
   const r = parseInt(hex.slice(1, 3), 16);

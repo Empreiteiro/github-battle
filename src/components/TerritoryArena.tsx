@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import type { Battle } from '../types';
-import { getParticipantColor, getIntensityLevels, NEUTRAL_CELL, CELL_BORDER } from '../utils/pixelArt';
+import { getParticipantColor, getTeamMemberColor, getIntensityLevels, NEUTRAL_CELL, CELL_BORDER } from '../utils/pixelArt';
 import { getAttackName, getAttackColor } from '../utils/scoring';
 import GitHubAvatar from './GitHubAvatar';
 
@@ -67,6 +67,25 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
   const prevGridRef = useRef<CellOwner[]>([]);
 
   const grid = useMemo(() => buildTerritoryGrid(battle), [battle]);
+
+  // When battle.teams is set, each participant gets a shade of their team's
+  // base color so teammates read as one cohort on the map. Falls back to the
+  // global distinct-color palette when there are no teams.
+  const participantColors = useMemo<string[]>(() => {
+    const colors = battle.participants.map((_, i) => getParticipantColor(i));
+    if (!battle.teams || battle.teams.length < 2) return colors;
+    for (const team of battle.teams) {
+      team.members.forEach((username, memberIdx) => {
+        const pIdx = battle.participants.findIndex(p => p.username === username);
+        if (pIdx !== -1) {
+          colors[pIdx] = getTeamMemberColor(team.color, memberIdx);
+        }
+      });
+    }
+    return colors;
+  }, [battle.participants, battle.teams]);
+
+  const colorFor = (idx: number) => participantColors[idx] ?? getParticipantColor(idx);
 
   // Detect new cells conquered and animate them
   useEffect(() => {
@@ -155,11 +174,10 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
     ctx.fillStyle = '#0d1117';
     ctx.fillRect(0, 0, totalWidth, totalHeight);
 
-    // Build color caches
+    // Build color caches (team-aware when battle.teams is set)
     const colorCache: Record<number, string[]> = {};
-    for (const p of battle.participants) {
-      const idx = battle.participants.indexOf(p);
-      colorCache[idx] = getIntensityLevels(getParticipantColor(idx));
+    for (let i = 0; i < battle.participants.length; i++) {
+      colorCache[i] = getIntensityLevels(colorFor(i));
     }
 
     // Draw cells
@@ -187,7 +205,7 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
 
       // Glow effect for newly conquered cells
       if (isAnimating && cell.participantIndex !== -1) {
-        const baseColor = getParticipantColor(cell.participantIndex);
+        const baseColor = colorFor(cell.participantIndex);
         ctx.shadowColor = baseColor;
         ctx.shadowBlur = 8;
         ctx.fillStyle = baseColor;
@@ -204,7 +222,7 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
       ctx.roundRect(x, y, cellSize, cellSize, radius);
       ctx.stroke();
     }
-  }, [grid, battle.participants, animatingCells]);
+  }, [grid, battle.participants, participantColors, animatingCells]);
 
   // Territory stats per participant
   const territoryStats = useMemo(() => {
@@ -287,44 +305,101 @@ export default function TerritoryArena({ battle, prevBattle }: Props) {
 
       {/* Legend / Scoreboard — hidden during waiting */}
       {battle.status !== 'waiting' && <div className="p-4 bg-dark-bg/30 border-t border-dark-border">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[...battle.participants]
-            .sort((a, b) => b.score - a.score)
-            .map((p) => {
-              const idx = battle.participants.indexOf(p);
-              const color = getParticipantColor(idx);
-              const cells = territoryStats[idx] || 0;
-              const pct = totalScore > 0 ? Math.round((p.score / totalScore) * 100) : 0;
-              const levels = getIntensityLevels(color);
-
+        {battle.teams && battle.teams.length >= 2 ? (
+          // Team mode: group entries by team so the shared color family reads clearly
+          <div className="space-y-3">
+            {battle.teams.map(team => {
+              const members = team.members
+                .map(username => battle.participants.find(p => p.username === username))
+                .filter((p): p is typeof battle.participants[number] => !!p);
+              const teamTotal = members.reduce((sum, p) => sum + p.score, 0);
+              const teamPct = totalScore > 0 ? Math.round((teamTotal / totalScore) * 100) : 0;
+              const teamCells = members.reduce((sum, p) => sum + (territoryStats[battle.participants.indexOf(p)] || 0), 0);
               return (
-                <div key={p.username} className="flex items-center gap-3 bg-dark-bg/50 p-2 rounded">
-                  <GitHubAvatar username={p.username} avatarUrl={p.avatarUrl} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-dark-text truncate">{p.username}</span>
-                      <div className="flex gap-[2px]">
-                        {levels.map((lv, li) => (
-                          <div
-                            key={li}
-                            className="w-[10px] h-[10px] rounded-[2px]"
-                            style={{ backgroundColor: lv }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] text-dark-muted">
-                      <span className="pixel-font" style={{ color }}>{p.score} pts</span>
-                      <span>&middot;</span>
-                      <span>{cells}/{TOTAL_CELLS} cells</span>
-                      <span>&middot;</span>
-                      <span>{pct}%</span>
-                    </div>
+                <div key={team.id}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="pixel-font text-[10px]" style={{ color: colorFor(battle.participants.indexOf(members[0])) }}>
+                      {team.name}
+                    </span>
+                    <span className="text-[10px] text-dark-muted">
+                      {teamTotal} pts &middot; {teamCells}/{TOTAL_CELLS} cells &middot; {teamPct}%
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {[...members].sort((a, b) => b.score - a.score).map(p => {
+                      const idx = battle.participants.indexOf(p);
+                      const color = colorFor(idx);
+                      const cells = territoryStats[idx] || 0;
+                      const pct = totalScore > 0 ? Math.round((p.score / totalScore) * 100) : 0;
+                      const levels = getIntensityLevels(color);
+                      return (
+                        <div key={p.username} className="flex items-center gap-3 bg-dark-bg/50 p-2 rounded">
+                          <GitHubAvatar username={p.username} avatarUrl={p.avatarUrl} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-dark-text truncate">{p.username}</span>
+                              <div className="flex gap-[2px]">
+                                {levels.map((lv, li) => (
+                                  <div key={li} className="w-[10px] h-[10px] rounded-[2px]" style={{ backgroundColor: lv }} />
+                                ))}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-dark-muted">
+                              <span className="pixel-font" style={{ color }}>{p.score} pts</span>
+                              <span>&middot;</span>
+                              <span>{cells}/{TOTAL_CELLS} cells</span>
+                              <span>&middot;</span>
+                              <span>{pct}%</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
             })}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {[...battle.participants]
+              .sort((a, b) => b.score - a.score)
+              .map((p) => {
+                const idx = battle.participants.indexOf(p);
+                const color = colorFor(idx);
+                const cells = territoryStats[idx] || 0;
+                const pct = totalScore > 0 ? Math.round((p.score / totalScore) * 100) : 0;
+                const levels = getIntensityLevels(color);
+
+                return (
+                  <div key={p.username} className="flex items-center gap-3 bg-dark-bg/50 p-2 rounded">
+                    <GitHubAvatar username={p.username} avatarUrl={p.avatarUrl} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-dark-text truncate">{p.username}</span>
+                        <div className="flex gap-[2px]">
+                          {levels.map((lv, li) => (
+                            <div
+                              key={li}
+                              className="w-[10px] h-[10px] rounded-[2px]"
+                              style={{ backgroundColor: lv }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-dark-muted">
+                        <span className="pixel-font" style={{ color }}>{p.score} pts</span>
+                        <span>&middot;</span>
+                        <span>{cells}/{TOTAL_CELLS} cells</span>
+                        <span>&middot;</span>
+                        <span>{pct}%</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </div>}
     </div>
   );
