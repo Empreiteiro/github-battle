@@ -5,7 +5,7 @@ export default function Layout() {
   const { user, login, logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-dark-bg">
+    <div className="min-h-screen bg-dark-bg flex flex-col">
       <header className="border-b border-dark-border bg-dark-card/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 no-underline">
@@ -63,7 +63,7 @@ export default function Layout() {
           </div>
         </div>
       </header>
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 w-full flex-1">
         <Outlet />
       </main>
       <footer className="border-t border-dark-border bg-dark-card/50 mt-12">
