@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { BattleInterval, ScoringConfig, ScoringKey, TournamentSize } from '../types';
-import { INTERVAL_LABELS, DEFAULT_SCORING, SCORING_LABELS } from '../types';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import type { BattleInterval, ScoringConfig, ScoringKey, Team, TournamentSize } from '../types';
+import { INTERVAL_LABELS, DEFAULT_SCORING, SCORING_LABELS, TEAM_COLORS } from '../types';
 import { api } from '../utils/api';
 import { getCreatorId } from '../utils/identity';
+import { teamClasses } from '../utils/teamColors';
 import RepoFilter from '../components/RepoFilter';
 
 type Mode = 'battle' | 'tournament';
@@ -13,9 +14,22 @@ function toLocalDatetime(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+function genTeamId(): string {
+  return 't_' + Math.random().toString(36).slice(2, 9);
+}
+
 export default function Create() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<Mode>('battle');
+  const [searchParams] = useSearchParams();
+
+  // Seed mode + tournament size from URL params (e.g. ?type=tournament&size=4)
+  const initialMode: Mode = searchParams.get('type') === 'tournament' ? 'tournament' : 'battle';
+  const paramSize = parseInt(searchParams.get('size') || '', 10);
+  const initialBracket: TournamentSize = ([4, 8, 16] as TournamentSize[]).includes(paramSize as TournamentSize)
+    ? (paramSize as TournamentSize)
+    : 4;
+
+  const [mode, setMode] = useState<Mode>(initialMode);
 
   // Shared state
   const [name, setName] = useState('');
@@ -33,8 +47,69 @@ export default function Create() {
   const [maxParticipants, setMaxParticipants] = useState(10);
 
   // Tournament-specific
-  const [bracketSize, setBracketSize] = useState<TournamentSize>(4);
+  const [bracketSize, setBracketSize] = useState<TournamentSize>(initialBracket);
   const [roundDuration, setRoundDuration] = useState<BattleInterval>('24h');
+
+  // Team mode (battle only) — allows 1v2, 2v2, 1v3, etc.
+  const [teamMode, setTeamMode] = useState(false);
+  const [teams, setTeams] = useState<Team[]>([
+    { id: genTeamId(), name: 'Team 1', color: TEAM_COLORS[0], members: [] },
+    { id: genTeamId(), name: 'Team 2', color: TEAM_COLORS[1], members: [] },
+  ]);
+
+  const assignedUsernames = useMemo(() => {
+    const set = new Set<string>();
+    for (const t of teams) for (const m of t.members) set.add(m.toLowerCase());
+    return set;
+  }, [teams]);
+
+  const validParticipants = useMemo(
+    () => participants.map(p => p.trim()).filter(p => p.length > 0),
+    [participants],
+  );
+
+  const addTeam = () => {
+    const color = TEAM_COLORS[teams.length % TEAM_COLORS.length];
+    setTeams([...teams, { id: genTeamId(), name: `Team ${teams.length + 1}`, color, members: [] }]);
+  };
+  const removeTeam = (id: string) => {
+    if (teams.length <= 2) return;
+    setTeams(teams.filter(t => t.id !== id));
+  };
+  const renameTeam = (id: string, name: string) => {
+    setTeams(teams.map(t => t.id === id ? { ...t, name } : t));
+  };
+  const togglePlayerInTeam = (teamId: string, username: string) => {
+    setTeams(prev => prev.map(t => {
+      // remove from all other teams; toggle within target team
+      if (t.id === teamId) {
+        return t.members.includes(username)
+          ? { ...t, members: t.members.filter(m => m !== username) }
+          : { ...t, members: [...t.members, username] };
+      }
+      return { ...t, members: t.members.filter(m => m !== username) };
+    }));
+  };
+
+  // Keep team members in sync when a participant is removed / renamed.
+  useEffect(() => {
+    const valid = new Set(validParticipants);
+    setTeams(ts => {
+      let changed = false;
+      const next = ts.map(t => {
+        const filtered = t.members.filter(m => valid.has(m));
+        if (filtered.length !== t.members.length) changed = true;
+        return { ...t, members: filtered };
+      });
+      return changed ? next : ts;
+    });
+  }, [validParticipants]);
+
+  // Team summary like "2 vs 1" or "2 vs 2 vs 1"
+  const teamSummary = teams
+    .filter(t => t.members.length > 0)
+    .map(t => t.members.length)
+    .join(' vs ');
 
   const toggleScoringType = (key: ScoringKey) => {
     setScoring(prev => ({ ...prev, enabled: { ...prev.enabled, [key]: !prev.enabled[key] } }));
@@ -73,6 +148,28 @@ export default function Create() {
       if (validP.length < 1) { setError('Add at least 1 participant'); return; }
       if (new Date(customStart) >= new Date(customEnd)) { setError('Start date must be before end date'); return; }
 
+      // Team-mode validation: require ≥2 non-empty teams and every participant assigned.
+      let teamsPayload: Team[] | undefined = undefined;
+      if (teamMode) {
+        const nonEmpty = teams.filter(t => t.members.length > 0);
+        if (nonEmpty.length < 2) {
+          setError('Team mode needs at least 2 teams with members');
+          return;
+        }
+        const assigned = new Set(nonEmpty.flatMap(t => t.members));
+        const unassigned = validP.filter(p => !assigned.has(p));
+        if (unassigned.length > 0) {
+          setError(`Assign all fighters to a team: ${unassigned.join(', ')}`);
+          return;
+        }
+        teamsPayload = nonEmpty.map(t => ({
+          id: t.id,
+          name: t.name.trim() || 'Team',
+          color: t.color,
+          members: t.members,
+        }));
+      }
+
       setLoading(true);
       try {
         const battle = await api.createBattle({
@@ -81,6 +178,7 @@ export default function Create() {
           participants: validP, maxParticipants, scoring,
           repos: repos.length > 0 ? repos : undefined,
           createdBy: getCreatorId(),
+          teams: teamsPayload,
         });
         navigate(`/battle/${battle.id}`);
       } catch (err) { setError(err instanceof Error ? err.message : 'Error creating battle'); }
@@ -246,6 +344,100 @@ export default function Create() {
             <p className="text-[10px] text-dark-muted mt-2">Tournament starts automatically when all {bracketSize} slots are filled.</p>
           )}
         </div>
+
+        {/* Battle-only: Team Mode */}
+        {mode === 'battle' && (
+          <div className="pixel-border bg-dark-card p-4 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <label className="pixel-font text-[10px] text-accent-blue">&#128101; TEAM MODE</label>
+              <button
+                type="button"
+                onClick={() => setTeamMode(v => !v)}
+                role="switch"
+                aria-checked={teamMode}
+                className={`relative w-11 h-6 rounded-full border transition-colors cursor-pointer ${teamMode ? 'bg-accent-green/30 border-accent-green/60' : 'bg-dark-bg border-dark-border'}`}
+              >
+                <span className={`absolute top-0.5 ${teamMode ? 'right-0.5 bg-accent-green' : 'left-0.5 bg-dark-muted'} w-5 h-5 rounded-full transition-all`} />
+              </button>
+            </div>
+            <p className="text-[10px] text-dark-muted mb-3">
+              Group fighters into teams for free combinations like <b>1v2</b>, <b>2v2</b>, <b>1v3</b>, or even <b>2v2v1</b>.
+            </p>
+
+            {teamMode && (
+              <>
+                {validParticipants.length === 0 ? (
+                  <p className="text-[10px] text-accent-orange">Add fighters above, then assign them to teams.</p>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="pixel-font text-[10px] text-dark-muted">
+                        {teamSummary ? `Matchup: ${teamSummary}` : 'No team has members yet'}
+                      </span>
+                      <span className="text-[10px] text-dark-muted">
+                        {assignedUsernames.size}/{validParticipants.length} assigned
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {teams.map((team) => {
+                        const c = teamClasses(team.color);
+                        return (
+                          <div key={team.id} className={`rounded-lg border p-3 bg-dark-bg/40 ${c.softBorder}`}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <input
+                                type="text"
+                                value={team.name}
+                                onChange={e => renameTeam(team.id, e.target.value)}
+                                maxLength={30}
+                                className={`flex-1 bg-dark-bg border border-dark-border ${c.text} pixel-font text-xs p-2 rounded focus:${c.border} outline-none`}
+                              />
+                              <span className={`pixel-font text-[10px] ${c.text}`}>{team.members.length}</span>
+                              {teams.length > 2 && (
+                                <button type="button" onClick={() => removeTeam(team.id)} className="text-accent-red hover:bg-accent-red/20 px-2 py-1 rounded transition-colors cursor-pointer" aria-label="Remove team">
+                                  &#10005;
+                                </button>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {validParticipants.map(username => {
+                                const inThisTeam = team.members.includes(username);
+                                const inOtherTeam = !inThisTeam && assignedUsernames.has(username.toLowerCase());
+                                return (
+                                  <button
+                                    key={username}
+                                    type="button"
+                                    onClick={() => togglePlayerInTeam(team.id, username)}
+                                    className={`text-[10px] px-2 py-1 rounded border transition-colors cursor-pointer ${
+                                      inThisTeam
+                                        ? `${c.softBg} ${c.text} ${c.border}`
+                                        : inOtherTeam
+                                          ? 'bg-dark-bg/60 text-dark-muted/60 border-dark-border/60 hover:bg-dark-border/30'
+                                          : 'bg-dark-bg text-dark-muted border-dark-border hover:text-dark-text hover:border-dark-muted'
+                                    }`}
+                                    title={inOtherTeam ? 'Move to this team' : undefined}
+                                  >
+                                    {inThisTeam ? '\u2713 ' : ''}{username}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addTeam}
+                      className="mt-3 pixel-font text-[10px] text-accent-green hover:bg-accent-green/10 px-3 py-1 rounded transition-colors cursor-pointer"
+                    >
+                      + ADD TEAM
+                    </button>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
 
         {/* Battle-only: Password + Max Fighters */}
         {mode === 'battle' && (

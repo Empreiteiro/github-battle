@@ -48,6 +48,13 @@ export interface ScoreSnapshot {
   scores: Record<string, number>; // username -> score
 }
 
+export interface Team {
+  id: string;
+  name: string;
+  color?: string; // accent-* token without the prefix (e.g. "green", "blue")
+  members: string[]; // participant usernames in this team
+}
+
 export interface Battle {
   id: string;
   name: string;
@@ -67,6 +74,7 @@ export interface Battle {
   lastRefresh: string;
   createdAt: string;
   newBadges?: Record<string, string[]>;
+  teams?: Team[]; // optional team grouping — supports free combinations (1v2, 2v2, 1v3, etc.)
 }
 
 export interface CreateBattleRequest {
@@ -80,7 +88,12 @@ export interface CreateBattleRequest {
   scoring?: ScoringConfig;
   repos?: string[];
   createdBy?: string;
+  teams?: Team[];
 }
+
+// Rotating palette for team colors
+export const TEAM_COLORS = ['green', 'blue', 'purple', 'orange', 'red', 'yellow'] as const;
+export type TeamColor = typeof TEAM_COLORS[number];
 
 export interface JoinBattleRequest {
   username: string;

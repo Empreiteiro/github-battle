@@ -67,12 +67,20 @@ export default function Home() {
           Create battle rooms and see who's the most active dev on GitHub!
           RPG pixel art animations based on real activity.
         </p>
-        <Link
-          to="/create"
-          className="inline-block pixel-font text-sm bg-accent-green text-dark-bg px-8 py-3 rounded hover:bg-accent-green/90 transition-colors no-underline animate-pulse-glow"
-        >
-          CREATE BATTLE
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link
+            to="/create"
+            className="inline-block pixel-font text-sm bg-accent-green text-dark-bg px-8 py-3 rounded hover:bg-accent-green/90 transition-colors no-underline animate-pulse-glow"
+          >
+            CREATE BATTLE
+          </Link>
+          <Link
+            to="/create?type=tournament&size=4"
+            className="inline-flex items-center gap-2 pixel-font text-sm bg-accent-purple/20 text-accent-purple border border-accent-purple/50 px-6 py-3 rounded hover:bg-accent-purple/30 transition-colors no-underline"
+          >
+            &#127942; 4-PLAYER TOURNAMENT
+          </Link>
+        </div>
       </div>
 
       {/* Scoring info */}

@@ -110,10 +110,18 @@ export default function BattleRoom() {
           <h1 className="pixel-font text-base md:text-lg text-accent-green mb-1">
             {battle.name}
           </h1>
-          <div className="flex items-center gap-3 text-xs text-dark-muted">
+          <div className="flex items-center gap-3 text-xs text-dark-muted flex-wrap">
             <span>{INTERVAL_LABELS[battle.interval]}</span>
             <span>|</span>
             <span>{battle.participants.length} fighters</span>
+            {battle.teams && battle.teams.length >= 2 && (
+              <>
+                <span>|</span>
+                <span className="text-accent-purple">
+                  &#128101; {battle.teams.map(t => t.members.length).join(' vs ')}
+                </span>
+              </>
+            )}
             {battle.hasPassword && <span>&#128274; Private</span>}
             {battle.status === 'active' && (
               <>
@@ -253,7 +261,7 @@ export default function BattleRoom() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         {/* Scoreboard — takes 2 columns */}
         <div className="lg:col-span-2 flex flex-col">
-          <ParticipantList participants={battle.participants} scoring={battle.scoring} />
+          <ParticipantList participants={battle.participants} scoring={battle.scoring} teams={battle.teams} />
         </div>
 
         {/* Sidebar */}

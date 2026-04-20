@@ -39,7 +39,7 @@ export default async function handler(request: Request, _context: Context) {
 
   try {
     const body = await request.json();
-    const { name, password, interval, participants, maxParticipants, customStart, customEnd, scoring, repos, createdBy } = body;
+    const { name, password, interval, participants, maxParticipants, customStart, customEnd, scoring, repos, createdBy, teams } = body;
 
     if (!name || !interval || !participants || !Array.isArray(participants) || participants.length < 1) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
@@ -73,6 +73,37 @@ export default async function handler(request: Request, _context: Context) {
       }),
     );
 
+    // Validate teams if provided: members must be part of the participant list,
+    // each participant may belong to at most one team, and at least 2 teams with
+    // at least 1 member each are required.
+    let validatedTeams: StoredBattle['teams'] = undefined;
+    if (Array.isArray(teams) && teams.length > 0) {
+      const usernameSet = new Set(participantList.map(p => p.username.toLowerCase()));
+      const seen = new Set<string>();
+      const sanitized = teams
+        .filter((t: { name?: string; members?: string[] }) => t && typeof t.name === 'string' && Array.isArray(t.members))
+        .map((t: { id?: string; name: string; color?: string; members: string[] }) => {
+          const members = t.members
+            .map(m => String(m).trim())
+            .filter(m => {
+              const key = m.toLowerCase();
+              if (!usernameSet.has(key) || seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
+          return {
+            id: t.id && typeof t.id === 'string' ? t.id : generateId(),
+            name: t.name.slice(0, 40),
+            color: typeof t.color === 'string' ? t.color : undefined,
+            members,
+          };
+        })
+        .filter((t) => t.members.length > 0);
+      if (sanitized.length >= 2) {
+        validatedTeams = sanitized;
+      }
+    }
+
     const battle: StoredBattle = {
       id,
       name,
@@ -87,6 +118,7 @@ export default async function handler(request: Request, _context: Context) {
       scoring: scoring || undefined,
       repos: repos && repos.length > 0 ? repos : undefined,
       createdBy: createdBy || undefined,
+      teams: validatedTeams,
       lastRefresh: startDate,
       createdAt: nowISO,
     };

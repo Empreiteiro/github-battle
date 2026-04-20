@@ -35,6 +35,12 @@ export interface StoredBattle {
   lastRefresh: string;
   createdAt: string;
   leaderboardUpdated?: boolean;
+  teams?: {
+    id: string;
+    name: string;
+    color?: string;
+    members: string[];
+  }[];
 }
 
 function getBattleStore() {

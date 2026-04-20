@@ -91,6 +91,28 @@ export const localStore = {
       }),
     );
 
+    // Validate teams: members must match participant usernames and appear in
+    // exactly one team; require at least 2 teams with ≥1 member each.
+    let teams: Battle['teams'] = undefined;
+    if (data.teams && data.teams.length > 0) {
+      const usernameSet = new Set(participants.map(p => p.username.toLowerCase()));
+      const seen = new Set<string>();
+      const sanitized = data.teams
+        .map(t => ({
+          id: t.id || generateId(),
+          name: t.name.slice(0, 40),
+          color: t.color,
+          members: t.members.filter(m => {
+            const key = m.toLowerCase();
+            if (!usernameSet.has(key) || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          }),
+        }))
+        .filter(t => t.members.length > 0);
+      if (sanitized.length >= 2) teams = sanitized;
+    }
+
     const battle: Battle = {
       id,
       name: data.name,
@@ -105,6 +127,7 @@ export const localStore = {
       scoring: data.scoring || DEFAULT_SCORING,
       repos: data.repos && data.repos.length > 0 ? data.repos : undefined,
       createdBy: data.createdBy,
+      teams,
       lastRefresh: startDate, // force immediate refresh on first load
       createdAt: now.toISOString(),
     };
