@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { Battle, ScoreSnapshot } from '../types';
-import { getParticipantColor, getIntensityLevels, NEUTRAL_CELL, CELL_BORDER } from '../utils/pixelArt';
+import { getParticipantColor, getTeamMemberColor, getIntensityLevels, NEUTRAL_CELL, CELL_BORDER } from '../utils/pixelArt';
 
 const COLS = 52;
 const ROWS = 7;
@@ -15,6 +15,7 @@ type Speed = 1 | 2 | 5 | 10 | 20;
 function buildGridFromScores(
   participants: Battle['participants'],
   scores: Record<string, number>,
+  teams?: Battle['teams'],
 ): { participantIndex: number; intensity: number }[] {
   const grid = Array.from({ length: TOTAL_CELLS }, () => ({
     participantIndex: -1,
@@ -24,9 +25,35 @@ function buildGridFromScores(
   const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
   if (totalScore === 0) return grid;
 
-  const sorted = participants
-    .map((p, i) => ({ index: i, score: scores[p.username] || 0 }))
-    .sort((a, b) => b.score - a.score);
+  // Group teammates so their cells form contiguous regions: sort teams by
+  // total score desc, then members within each team by individual score desc.
+  // Falls back to flat score-desc ordering when there are no teams.
+  let sorted: { index: number; score: number }[];
+  if (teams && teams.length >= 2) {
+    const scoreOf = (i: number) => scores[participants[i].username] || 0;
+    const grouped = teams.map(team => {
+      const members = team.members
+        .map(u => participants.findIndex(p => p.username === u))
+        .filter(i => i !== -1)
+        .map(i => ({ index: i, score: scoreOf(i) }))
+        .sort((a, b) => b.score - a.score);
+      const total = members.reduce((s, m) => s + m.score, 0);
+      return { members, total };
+    }).sort((a, b) => b.total - a.total);
+
+    const assigned = new Set(grouped.flatMap(g => g.members.map(m => m.index)));
+    const leftover = participants
+      .map((_, i) => i)
+      .filter(i => !assigned.has(i))
+      .map(i => ({ index: i, score: scoreOf(i) }))
+      .sort((a, b) => b.score - a.score);
+
+    sorted = [...grouped.flatMap(g => g.members), ...leftover];
+  } else {
+    sorted = participants
+      .map((p, i) => ({ index: i, score: scores[p.username] || 0 }))
+      .sort((a, b) => b.score - a.score);
+  }
 
   let cellIndex = 0;
   for (const { index, score } of sorted) {
@@ -63,8 +90,24 @@ export default function ReplayPlayer({ battle }: Props) {
 
   const grid = useMemo(() => {
     if (!currentSnapshot) return Array.from({ length: TOTAL_CELLS }, () => ({ participantIndex: -1, intensity: 0 }));
-    return buildGridFromScores(battle.participants, currentSnapshot.scores);
-  }, [currentSnapshot, battle.participants]);
+    return buildGridFromScores(battle.participants, currentSnapshot.scores, battle.teams);
+  }, [currentSnapshot, battle.participants, battle.teams]);
+
+  const participantColors = useMemo<string[]>(() => {
+    const colors = battle.participants.map((_, i) => getParticipantColor(i));
+    if (!battle.teams || battle.teams.length < 2) return colors;
+    for (const team of battle.teams) {
+      team.members.forEach((username, memberIdx) => {
+        const pIdx = battle.participants.findIndex(p => p.username === username);
+        if (pIdx !== -1) {
+          colors[pIdx] = getTeamMemberColor(team.color, memberIdx);
+        }
+      });
+    }
+    return colors;
+  }, [battle.participants, battle.teams]);
+
+  const colorFor = (idx: number) => participantColors[idx] ?? getParticipantColor(idx);
 
   // Playback logic
   const advance = useCallback(() => {
@@ -109,7 +152,7 @@ export default function ReplayPlayer({ battle }: Props) {
 
     const colorCache: Record<number, string[]> = {};
     for (let idx = 0; idx < battle.participants.length; idx++) {
-      colorCache[idx] = getIntensityLevels(getParticipantColor(idx));
+      colorCache[idx] = getIntensityLevels(colorFor(idx));
     }
 
     for (let i = 0; i < TOTAL_CELLS; i++) {
@@ -134,7 +177,7 @@ export default function ReplayPlayer({ battle }: Props) {
       ctx.roundRect(x, y, cellSize, cellSize, radius);
       ctx.stroke();
     }
-  }, [grid, battle.participants]);
+  }, [grid, battle.participants, participantColors]);
 
   if (frameCount < 2) {
     return (
@@ -231,7 +274,7 @@ export default function ReplayPlayer({ battle }: Props) {
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
             {battle.participants.map((p, idx) => {
               const score = currentSnapshot.scores[p.username] || 0;
-              const color = getParticipantColor(idx);
+              const color = colorFor(idx);
               const isLeader = leader && leader[0] === p.username;
               return (
                 <span key={p.username} className="flex items-center gap-1">
