@@ -36,10 +36,33 @@ function buildTerritoryGrid(battle: Battle): CellOwner[] {
   const totalScore = battle.participants.reduce((sum, p) => sum + p.score, 0);
   if (totalScore === 0) return grid;
 
-  // Sort participants by score descending for visual placement
-  const sorted = battle.participants
-    .map((p, i) => ({ index: i, score: p.score }))
-    .sort((a, b) => b.score - a.score);
+  // Group teammates so their cells form contiguous regions: sort teams by
+  // total score desc, then members within each team by individual score desc.
+  // Falls back to flat score-desc ordering when there are no teams.
+  let sorted: { index: number; score: number }[];
+  if (battle.teams && battle.teams.length >= 2) {
+    const grouped = battle.teams.map(team => {
+      const members = team.members
+        .map(u => battle.participants.findIndex(p => p.username === u))
+        .filter(i => i !== -1)
+        .map(i => ({ index: i, score: battle.participants[i].score }))
+        .sort((a, b) => b.score - a.score);
+      const total = members.reduce((s, m) => s + m.score, 0);
+      return { members, total };
+    }).sort((a, b) => b.total - a.total);
+
+    const assigned = new Set(grouped.flatMap(g => g.members.map(m => m.index)));
+    const leftover = battle.participants
+      .map((p, i) => ({ index: i, score: p.score }))
+      .filter(x => !assigned.has(x.index))
+      .sort((a, b) => b.score - a.score);
+
+    sorted = [...grouped.flatMap(g => g.members), ...leftover];
+  } else {
+    sorted = battle.participants
+      .map((p, i) => ({ index: i, score: p.score }))
+      .sort((a, b) => b.score - a.score);
+  }
 
   let cellIndex = 0;
   for (const { index, score } of sorted) {
