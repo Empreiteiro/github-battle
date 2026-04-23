@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { Battle, ScoreSnapshot } from '../types';
 import { getParticipantColor, getTeamMemberColor, getIntensityLevels, NEUTRAL_CELL, CELL_BORDER } from '../utils/pixelArt';
+import { playSwordClash, unlockAudio } from '../utils/battleAudio';
 
 const COLS = 52;
 const ROWS = 7;
@@ -78,8 +79,10 @@ export default function ReplayPlayer({ battle }: Props) {
   const [currentFrame, setCurrentFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<Speed>(1);
+  const [muted, setMuted] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const prevFrameRef = useRef<number>(-1);
 
   const frameCount = history.length;
 
@@ -126,6 +129,25 @@ export default function ReplayPlayer({ battle }: Props) {
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [playing, speed, advance]);
+
+  // Battle SFX: play a sword clash whenever a score changes between frames
+  // during active playback. Skips scrubs and silent frames.
+  useEffect(() => {
+    if (!playing || muted) {
+      prevFrameRef.current = currentFrame;
+      return;
+    }
+    const prevIdx = prevFrameRef.current;
+    prevFrameRef.current = currentFrame;
+    if (prevIdx < 0 || prevIdx === currentFrame) return;
+    const prev = history[prevIdx];
+    const curr = history[currentFrame];
+    if (!prev || !curr) return;
+    const changed = Object.keys(curr.scores).some(
+      user => (curr.scores[user] || 0) !== (prev.scores[user] || 0),
+    );
+    if (changed) playSwordClash();
+  }, [currentFrame, playing, muted, history]);
 
   // Canvas rendering
   useEffect(() => {
@@ -238,7 +260,7 @@ export default function ReplayPlayer({ battle }: Props) {
             &#9198;
           </button>
           <button
-            onClick={() => setPlaying(!playing)}
+            onClick={() => { unlockAudio(); setPlaying(!playing); }}
             className="pixel-font text-sm bg-accent-purple/20 text-accent-purple border border-accent-purple/50 px-4 py-2 rounded hover:bg-accent-purple/30 transition-colors cursor-pointer"
           >
             {playing ? '\u23F8 PAUSE' : '\u25B6 PLAY'}
@@ -267,6 +289,16 @@ export default function ReplayPlayer({ battle }: Props) {
               </button>
             ))}
           </div>
+
+          {/* Mute toggle */}
+          <button
+            onClick={() => setMuted(m => !m)}
+            className="pixel-font text-[10px] text-dark-muted hover:text-dark-text px-2 py-1 ml-2 cursor-pointer"
+            title={muted ? 'Unmute battle SFX' : 'Mute battle SFX'}
+            aria-label={muted ? 'Unmute' : 'Mute'}
+          >
+            {muted ? '\u{1F507}' : '\u{1F50A}'}
+          </button>
         </div>
 
         {/* Score at current frame */}
