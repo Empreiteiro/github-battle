@@ -12,7 +12,8 @@ export default async function handler(request: Request, _context: Context) {
   }
 
   try {
-    const { name, size, roundDuration, scoring, repos, participants } = await request.json();
+    const { name, size, roundDuration, scoringMode, scoring, repos, participants } = await request.json();
+    const mode: 'window' | 'sprint' = scoringMode === 'sprint' ? 'sprint' : 'window';
 
     if (!name || !size || !roundDuration) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
@@ -64,6 +65,7 @@ export default async function handler(request: Request, _context: Context) {
       name,
       size,
       roundDuration,
+      scoringMode: mode,
       scoring: scoring || undefined,
       repos: repos && repos.length > 0 ? repos : undefined,
       status: initialParticipants.length >= size ? 'active' : 'registration',

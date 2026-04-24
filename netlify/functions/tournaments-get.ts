@@ -34,13 +34,15 @@ async function createMatchBattle(
   avatar1: string,
   avatar2: string,
   roundDuration: string,
+  scoringMode: 'window' | 'sprint',
   scoring?: Record<string, unknown>,
   repos?: string[],
 ): Promise<string> {
   const id = generateId();
   const now = new Date();
   const ms = INTERVAL_MS[roundDuration] || 24 * 3600_000;
-  const startDate = new Date(now.getTime() - ms).toISOString();
+  // Sprint: race forward from now. Window: symmetric past + future window around now.
+  const startDate = (scoringMode === 'sprint' ? now : new Date(now.getTime() - ms)).toISOString();
   const endDate = new Date(now.getTime() + ms).toISOString();
 
   const battle: StoredBattle = {
@@ -48,6 +50,7 @@ async function createMatchBattle(
     name: `${tournamentName} \u2014 R${round} M${matchNum}`,
     password: null,
     interval: roundDuration,
+    scoringMode,
     startDate,
     endDate,
     status: 'active',
@@ -104,6 +107,7 @@ export default async function handler(request: Request, _context: Context) {
           tournament.participantAvatars[p1] || `https://github.com/${p1}.png`,
           tournament.participantAvatars[p2] || `https://github.com/${p2}.png`,
           tournament.roundDuration,
+          tournament.scoringMode === 'sprint' ? 'sprint' : 'window',
           tournament.scoring,
           tournament.repos,
         );
@@ -167,6 +171,7 @@ export default async function handler(request: Request, _context: Context) {
               tournament.participantAvatars[p1] || `https://github.com/${p1}.png`,
               tournament.participantAvatars[p2] || `https://github.com/${p2}.png`,
               tournament.roundDuration,
+              tournament.scoringMode === 'sprint' ? 'sprint' : 'window',
               tournament.scoring,
               tournament.repos,
             );

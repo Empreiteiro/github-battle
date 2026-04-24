@@ -39,19 +39,25 @@ export default async function handler(request: Request, _context: Context) {
 
   try {
     const body = await request.json();
-    const { name, password, interval, participants, maxParticipants, customStart, customEnd, scoring, repos, createdBy, teams } = body;
+    const { name, password, interval, scoringMode, participants, maxParticipants, customStart, customEnd, scoring, repos, createdBy, teams } = body;
 
     if (!name || !interval || !participants || !Array.isArray(participants) || participants.length < 1) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400 });
     }
 
+    const mode: 'window' | 'sprint' = scoringMode === 'sprint' ? 'sprint' : 'window';
     const now = new Date();
     const id = generateId();
     const nowISO = now.toISOString();
 
     let startDate: string;
     let endDate: string;
-    if (customStart && customEnd) {
+    if (mode === 'sprint') {
+      // Sprint: ignore custom dates. Race forward from now for `interval`.
+      const span = INTERVAL_MS[interval] || 24 * 3600_000;
+      startDate = nowISO;
+      endDate = new Date(now.getTime() + span).toISOString();
+    } else if (customStart && customEnd) {
       startDate = customStart;
       endDate = customEnd;
     } else {
@@ -109,6 +115,7 @@ export default async function handler(request: Request, _context: Context) {
       name,
       password: password || null,
       interval,
+      scoringMode: mode,
       startDate,
       endDate,
       status: participantList.length >= 2 ? 'active' : 'waiting',

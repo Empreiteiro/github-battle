@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import type { BattleInterval, ScoringConfig, ScoringKey, Team, TournamentSize } from '../types';
+import type { BattleInterval, ScoringConfig, ScoringKey, ScoringMode, Team, TournamentSize } from '../types';
 import { INTERVAL_LABELS, DEFAULT_SCORING, SCORING_LABELS, TEAM_COLORS } from '../types';
 import { api } from '../utils/api';
 import { getCreatorId } from '../utils/identity';
@@ -33,6 +33,7 @@ export default function Create() {
 
   // Shared state
   const [name, setName] = useState('');
+  const [scoringMode, setScoringMode] = useState<ScoringMode>('window');
   const [scoring, setScoring] = useState<ScoringConfig>(structuredClone(DEFAULT_SCORING));
   const [repos, setRepos] = useState<string[]>([]);
   const [participants, setParticipants] = useState(['']);
@@ -125,9 +126,23 @@ export default function Create() {
     setInterval(key);
     if (key !== 'custom') {
       const ms: Record<string, number> = { '1h': 3600_000, '6h': 6 * 3600_000, '24h': 24 * 3600_000, '7d': 7 * 24 * 3600_000, '30d': 30 * 24 * 3600_000 };
-      const lookback = ms[key] || 24 * 3600_000;
-      setCustomStart(toLocalDatetime(new Date(Date.now() - lookback)));
-      setCustomEnd(toLocalDatetime(new Date(Date.now() + lookback)));
+      const span = ms[key] || 24 * 3600_000;
+      // Sprint mode races forward from now; window mode keeps the symmetric past+future window.
+      const startMs = scoringMode === 'sprint' ? Date.now() : Date.now() - span;
+      setCustomStart(toLocalDatetime(new Date(startMs)));
+      setCustomEnd(toLocalDatetime(new Date(Date.now() + span)));
+    }
+  };
+
+  // Switching to sprint mode forces start = now and disables the 'custom' window pickers.
+  const handleScoringModeChange = (mode: ScoringMode) => {
+    setScoringMode(mode);
+    if (mode === 'sprint') {
+      const ms: Record<string, number> = { '1h': 3600_000, '6h': 6 * 3600_000, '24h': 24 * 3600_000, '7d': 7 * 24 * 3600_000, '30d': 30 * 24 * 3600_000 };
+      const span = ms[interval === 'custom' ? '24h' : interval] || 24 * 3600_000;
+      if (interval === 'custom') setInterval('24h');
+      setCustomStart(toLocalDatetime(new Date()));
+      setCustomEnd(toLocalDatetime(new Date(Date.now() + span)));
     }
   };
 
@@ -174,6 +189,7 @@ export default function Create() {
       try {
         const battle = await api.createBattle({
           name: name.trim(), password: password || undefined, interval,
+          scoringMode,
           customStart: new Date(customStart).toISOString(), customEnd: new Date(customEnd).toISOString(),
           participants: validP, maxParticipants, scoring,
           repos: repos.length > 0 ? repos : undefined,
@@ -187,7 +203,8 @@ export default function Create() {
       setLoading(true);
       try {
         const tournament = await api.createTournament({
-          name: name.trim(), size: bracketSize, roundDuration, scoring,
+          name: name.trim(), size: bracketSize, roundDuration,
+          scoringMode, scoring,
           repos: repos.length > 0 ? repos : undefined,
           participants: validP.length > 0 ? validP : undefined,
         });
@@ -230,6 +247,26 @@ export default function Create() {
             className="w-full bg-dark-bg border border-dark-border text-dark-text p-3 rounded focus:border-accent-blue outline-none" maxLength={50} />
         </div>
 
+        {/* Scoring Mode (window vs forward-only sprint) */}
+        <div className="pixel-border bg-dark-card p-4 rounded-lg">
+          <label className="pixel-font text-[10px] text-accent-blue block mb-2">SCORING MODE</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => handleScoringModeChange('window')}
+              className={`pixel-font text-xs py-3 rounded border transition-colors cursor-pointer ${scoringMode === 'window' ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/50' : 'bg-dark-bg text-dark-muted border-dark-border hover:border-dark-muted'}`}>
+              &#129534; Scoring Window
+            </button>
+            <button type="button" onClick={() => handleScoringModeChange('sprint')}
+              className={`pixel-font text-xs py-3 rounded border transition-colors cursor-pointer ${scoringMode === 'sprint' ? 'bg-accent-orange/20 text-accent-orange border-accent-orange/50' : 'bg-dark-bg text-dark-muted border-dark-border hover:border-dark-muted'}`}>
+              &#9889; Live Sprint
+            </button>
+          </div>
+          <p className="text-[10px] text-dark-muted mt-2">
+            {scoringMode === 'window'
+              ? 'Counts past + future activity inside the chosen window. Past contributions count.'
+              : 'Race forward from the moment the battle starts. Only activity from now until the end counts.'}
+          </p>
+        </div>
+
         {/* Tournament: Bracket Size */}
         {mode === 'tournament' && (
           <div className="pixel-border bg-dark-card p-4 rounded-lg">
@@ -246,31 +283,39 @@ export default function Create() {
           </div>
         )}
 
-        {/* Battle: Scoring Window */}
+        {/* Battle: Scoring Window / Sprint Duration */}
         {mode === 'battle' && (
           <div className="pixel-border bg-dark-card p-4 rounded-lg">
-            <label className="pixel-font text-[10px] text-accent-blue block mb-2">SCORING WINDOW</label>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
-              {presets.map(key => (
+            <label className="pixel-font text-[10px] text-accent-blue block mb-2">
+              {scoringMode === 'sprint' ? 'SPRINT DURATION' : 'SCORING WINDOW'}
+            </label>
+            <div className={`grid ${scoringMode === 'sprint' ? 'grid-cols-3 md:grid-cols-5' : 'grid-cols-3 md:grid-cols-6'} gap-2 mb-4`}>
+              {(scoringMode === 'sprint' ? durationPresets : presets).map(key => (
                 <button key={key} type="button" onClick={() => handleIntervalSelect(key)}
                   className={`pixel-font text-[10px] py-2 px-1 rounded border transition-colors cursor-pointer ${interval === key ? 'bg-accent-blue/20 text-accent-blue border-accent-blue/50' : 'bg-dark-bg text-dark-muted border-dark-border hover:border-dark-muted'}`}>
                   {INTERVAL_LABELS[key]}
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="pixel-font text-[10px] text-accent-green block mb-1">SCORING FROM</label>
-                <input type="datetime-local" value={customStart} onChange={e => { setCustomStart(e.target.value); setInterval('custom'); }}
-                  className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-green outline-none text-sm" />
-              </div>
-              <div>
-                <label className="pixel-font text-[10px] text-accent-orange block mb-1">SCORING UNTIL</label>
-                <input type="datetime-local" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setInterval('custom'); }}
-                  className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-orange outline-none text-sm" />
-              </div>
-            </div>
-            <p className="text-[10px] text-dark-muted mt-2">GitHub activity within this window is scored. Past activity counts!</p>
+            {scoringMode === 'window' ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="pixel-font text-[10px] text-accent-green block mb-1">SCORING FROM</label>
+                    <input type="datetime-local" value={customStart} onChange={e => { setCustomStart(e.target.value); setInterval('custom'); }}
+                      className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-green outline-none text-sm" />
+                  </div>
+                  <div>
+                    <label className="pixel-font text-[10px] text-accent-orange block mb-1">SCORING UNTIL</label>
+                    <input type="datetime-local" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setInterval('custom'); }}
+                      className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-orange outline-none text-sm" />
+                  </div>
+                </div>
+                <p className="text-[10px] text-dark-muted mt-2">GitHub activity within this window is scored. Past activity counts!</p>
+              </>
+            ) : (
+              <p className="text-[10px] text-dark-muted">Battle starts now and runs for {INTERVAL_LABELS[interval === 'custom' ? '24h' : interval]}. Only activity from start counts.</p>
+            )}
           </div>
         )}
 
@@ -286,7 +331,11 @@ export default function Create() {
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-dark-muted mt-2">Each matchup battle lasts this long.</p>
+            <p className="text-[10px] text-dark-muted mt-2">
+              {scoringMode === 'sprint'
+                ? 'Each round runs forward from its start for this duration.'
+                : 'Each matchup battle uses a window of this size around the round start.'}
+            </p>
           </div>
         )}
 

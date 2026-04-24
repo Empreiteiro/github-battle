@@ -22,6 +22,15 @@ export interface Participant {
 export type BattleInterval = '1h' | '6h' | '24h' | '7d' | '30d' | 'custom';
 export type BattleStatus = 'waiting' | 'active' | 'finished';
 
+// 'window' = default: scores past + future activity inside a symmetric interval around now.
+// 'sprint' = forward-only: scoring starts at battle/tournament start and runs for `interval` ahead.
+export type ScoringMode = 'window' | 'sprint';
+
+export const SCORING_MODE_LABELS: Record<ScoringMode, string> = {
+  window: 'Scoring Window',
+  sprint: 'Live Sprint',
+};
+
 export type ScoringKey = 'commit' | 'pr' | 'pr_merged' | 'issue' | 'review' | 'comment';
 
 export interface ScoringConfig {
@@ -60,6 +69,7 @@ export interface Battle {
   name: string;
   hasPassword: boolean;
   interval: BattleInterval;
+  scoringMode?: ScoringMode; // default 'window' for legacy battles
   startDate: string;
   endDate: string;
   status: BattleStatus;
@@ -81,6 +91,7 @@ export interface CreateBattleRequest {
   name: string;
   password?: string;
   interval: BattleInterval;
+  scoringMode?: ScoringMode;
   customStart?: string;
   customEnd?: string;
   participants: string[];
@@ -154,6 +165,7 @@ export interface Tournament {
   name: string;
   size: TournamentSize;
   roundDuration: BattleInterval;
+  scoringMode?: ScoringMode; // default 'window' for legacy tournaments
   scoring: ScoringConfig;
   repos?: string[];
   status: TournamentStatus;
@@ -168,6 +180,7 @@ export interface CreateTournamentRequest {
   name: string;
   size: TournamentSize;
   roundDuration: BattleInterval;
+  scoringMode?: ScoringMode;
   scoring?: ScoringConfig;
   repos?: string[];
   participants?: string[];

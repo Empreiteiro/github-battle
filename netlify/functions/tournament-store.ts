@@ -5,6 +5,7 @@ export interface StoredTournament {
   name: string;
   size: 4 | 8 | 16;
   roundDuration: string;
+  scoringMode?: 'window' | 'sprint'; // default 'window' for legacy tournaments
   scoring?: { enabled: Record<string, boolean>; points: Record<string, number> };
   repos?: string[];
   status: 'registration' | 'active' | 'finished';

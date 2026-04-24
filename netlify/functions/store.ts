@@ -5,6 +5,7 @@ export interface StoredBattle {
   name: string;
   password: string | null;
   interval: string;
+  scoringMode?: 'window' | 'sprint'; // default 'window' for legacy battles
   startDate: string;
   endDate: string;
   status: 'waiting' | 'active' | 'finished';

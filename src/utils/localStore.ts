@@ -58,11 +58,16 @@ export const localStore = {
   async createBattle(data: CreateBattleRequest): Promise<Battle> {
     const now = new Date();
     const id = generateId();
+    const mode: 'window' | 'sprint' = data.scoringMode === 'sprint' ? 'sprint' : 'window';
 
-    // Use custom dates if provided, otherwise calculate from interval
+    // Sprint: race forward from now. Window: honor custom dates if provided, else symmetric span.
     let startDate: string;
     let endDate: string;
-    if (data.customStart && data.customEnd) {
+    if (mode === 'sprint') {
+      const span = INTERVAL_MS[data.interval] || 24 * 3600_000;
+      startDate = now.toISOString();
+      endDate = new Date(now.getTime() + span).toISOString();
+    } else if (data.customStart && data.customEnd) {
       startDate = data.customStart;
       endDate = data.customEnd;
     } else {
@@ -118,6 +123,7 @@ export const localStore = {
       name: data.name,
       hasPassword: !!data.password,
       interval: data.interval,
+      scoringMode: mode,
       startDate,
       endDate,
       status: participants.length >= 2 ? 'active' : 'waiting',
@@ -285,6 +291,7 @@ export const localStore = {
     const tournament: Tournament = {
       id, name: data.name, size: data.size,
       roundDuration: data.roundDuration,
+      scoringMode: data.scoringMode === 'sprint' ? 'sprint' : 'window',
       scoring: data.scoring || DEFAULT_SCORING,
       repos: data.repos,
       status: participants.length >= data.size ? 'active' : 'registration',

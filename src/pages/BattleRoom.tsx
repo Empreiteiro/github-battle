@@ -113,6 +113,10 @@ export default function BattleRoom() {
           <div className="flex items-center gap-3 text-xs text-dark-muted flex-wrap">
             <span>{INTERVAL_LABELS[battle.interval]}</span>
             <span>|</span>
+            <span className={battle.scoringMode === 'sprint' ? 'text-accent-orange' : 'text-accent-blue'}>
+              {battle.scoringMode === 'sprint' ? '\u26A1 Live Sprint' : '\u{1F7AE} Scoring Window'}
+            </span>
+            <span>|</span>
             <span>{battle.participants.length} fighters</span>
             {battle.teams && battle.teams.length >= 2 && (
               <>
