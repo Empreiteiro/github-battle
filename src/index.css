@@ -73,6 +73,24 @@ body {
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-slide-up { animation: slide-up 0.4s ease-out; }
 
+/* #39d353 — accent-green */
+.datetime-green::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%) invert(63%) sepia(56%) saturate(606%) hue-rotate(86deg) brightness(107%) contrast(92%);
+  cursor: pointer;
+}
+.datetime-green::-webkit-calendar-picker-indicator:hover {
+  filter: brightness(0) saturate(100%) invert(63%) sepia(56%) saturate(606%) hue-rotate(86deg) brightness(130%) contrast(92%);
+}
+
+/* #d29922 — accent-orange */
+.datetime-orange::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%) invert(63%) sepia(95%) saturate(436%) hue-rotate(5deg) brightness(98%) contrast(86%);
+  cursor: pointer;
+}
+.datetime-orange::-webkit-calendar-picker-indicator:hover {
+  filter: brightness(0) saturate(100%) invert(63%) sepia(95%) saturate(436%) hue-rotate(5deg) brightness(120%) contrast(86%);
+}
+
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--color-dark-bg); }
 ::-webkit-scrollbar-thumb { background: var(--color-dark-border); border-radius: 4px; }

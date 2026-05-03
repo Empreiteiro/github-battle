@@ -167,7 +167,7 @@ export default function CreateBattle() {
                 type="datetime-local"
                 value={customStart}
                 onChange={e => { setCustomStart(e.target.value); setInterval('custom'); }}
-                className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-green outline-none text-sm"
+                className="datetime-green w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-green outline-none text-sm"
               />
             </div>
             <div>
@@ -178,7 +178,7 @@ export default function CreateBattle() {
                 type="datetime-local"
                 value={customEnd}
                 onChange={e => { setCustomEnd(e.target.value); setInterval('custom'); }}
-                className="w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-orange outline-none text-sm"
+                className="datetime-orange w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded focus:border-accent-orange outline-none text-sm"
               />
             </div>
           </div>
