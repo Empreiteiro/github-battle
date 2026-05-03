@@ -303,12 +303,14 @@ export default function Create() {
                   <div>
                     <label className="pixel-font text-[10px] text-accent-green block mb-1">SCORING FROM</label>
                     <input type="datetime-local" value={customStart} onChange={e => { setCustomStart(e.target.value); setInterval('custom'); }}
-                      className="datetime-green w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded transition-colors duration-150 hover:border-dark-muted focus:border-accent-green outline-none text-sm" />
+                      onClick={e => (e.target as HTMLInputElement).showPicker?.()}
+                      className="datetime-green w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded transition-colors duration-150 hover:border-dark-muted focus:border-accent-green outline-none text-sm cursor-pointer" />
                   </div>
                   <div>
                     <label className="pixel-font text-[10px] text-accent-orange block mb-1">SCORING UNTIL</label>
                     <input type="datetime-local" value={customEnd} onChange={e => { setCustomEnd(e.target.value); setInterval('custom'); }}
-                      className="datetime-orange w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded transition-colors duration-150 hover:border-dark-muted focus:border-accent-orange outline-none text-sm" />
+                      onClick={e => (e.target as HTMLInputElement).showPicker?.()}
+                      className="datetime-orange w-full bg-dark-bg border border-dark-border text-dark-text p-2 rounded transition-colors duration-150 hover:border-dark-muted focus:border-accent-orange outline-none text-sm cursor-pointer" />
                   </div>
                 </div>
                 <p className="text-[10px] text-dark-muted mt-2">GitHub activity within this window is scored. Past activity counts!</p>
