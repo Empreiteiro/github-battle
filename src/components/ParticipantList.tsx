@@ -69,14 +69,18 @@ export default function ParticipantList({ participants, scoring, teams }: Props)
                         </div>
                         <span className="pixel-font text-xs text-accent-green">{p.score}</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-1 text-[10px]">
-                        {activeKeys.map(key => (
-                          <StatItem
-                            key={key}
-                            label={SCORING_LABELS[key]}
-                            value={p.stats[STAT_MAP[key]]}
-                            points={sc.points[key]}
-                          />
+                      <div className="text-[10px]">
+                        {Array.from({ length: Math.ceil(activeKeys.length / 3) }, (_, i) => activeKeys.slice(i * 3, i * 3 + 3)).map((row, ri) => (
+                          <div key={ri} className="flex divide-x divide-dark-muted/30">
+                            {row.map(key => (
+                              <StatItem
+                                key={key}
+                                label={SCORING_LABELS[key]}
+                                value={p.stats[STAT_MAP[key]]}
+                                points={sc.points[key]}
+                              />
+                            ))}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -117,14 +121,18 @@ export default function ParticipantList({ participants, scoring, teams }: Props)
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 text-[10px]">
-              {activeKeys.map(key => (
-                <StatItem
-                  key={key}
-                  label={SCORING_LABELS[key]}
-                  value={p.stats[STAT_MAP[key]]}
-                  points={sc.points[key]}
-                />
+            <div className="text-[10px]">
+              {Array.from({ length: Math.ceil(activeKeys.length / 3) }, (_, i) => activeKeys.slice(i * 3, i * 3 + 3)).map((row, ri) => (
+                <div key={ri} className="flex divide-x divide-dark-muted/30">
+                  {row.map(key => (
+                    <StatItem
+                      key={key}
+                      label={SCORING_LABELS[key]}
+                      value={p.stats[STAT_MAP[key]]}
+                      points={sc.points[key]}
+                    />
+                  ))}
+                </div>
               ))}
             </div>
           </div>
@@ -136,9 +144,9 @@ export default function ParticipantList({ participants, scoring, teams }: Props)
 
 function StatItem({ label, value, points }: { label: string; value: number; points: number }) {
   return (
-    <div className="flex justify-between text-dark-muted">
-      <span>{label}</span>
-      <span className="text-dark-text">
+    <div className="flex items-center justify-between px-2 py-1 flex-1 gap-1">
+      <span className="text-dark-muted">{label}</span>
+      <span className="text-dark-text font-bold shrink-0">
         {value} <span className="text-accent-green text-[8px]">(+{value * points})</span>
       </span>
     </div>
