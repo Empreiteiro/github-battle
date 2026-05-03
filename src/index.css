@@ -73,22 +73,22 @@ body {
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-slide-up { animation: slide-up 0.4s ease-out; }
 
-/* #39d353 — accent-green */
-.datetime-green::-webkit-calendar-picker-indicator {
-  filter: brightness(0) saturate(100%) invert(63%) sepia(56%) saturate(606%) hue-rotate(86deg) brightness(107%) contrast(92%);
+/* default: #c9d1d9 text color */
+.datetime-green::-webkit-calendar-picker-indicator,
+.datetime-orange::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(0%) invert(82%);
   cursor: pointer;
-}
-.datetime-green::-webkit-calendar-picker-indicator:hover {
-  filter: brightness(0) saturate(100%) invert(63%) sepia(56%) saturate(606%) hue-rotate(86deg) brightness(130%) contrast(92%);
+  transition: filter 150ms ease;
 }
 
-/* #d29922 — accent-orange */
-.datetime-orange::-webkit-calendar-picker-indicator {
-  filter: brightness(0) saturate(100%) invert(63%) sepia(95%) saturate(436%) hue-rotate(5deg) brightness(98%) contrast(86%);
-  cursor: pointer;
+/* focus: accent-green #39d353 */
+.datetime-green:focus::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%) invert(63%) sepia(56%) saturate(606%) hue-rotate(86deg) brightness(107%) contrast(92%);
 }
-.datetime-orange::-webkit-calendar-picker-indicator:hover {
-  filter: brightness(0) saturate(100%) invert(63%) sepia(95%) saturate(436%) hue-rotate(5deg) brightness(120%) contrast(86%);
+
+/* focus: accent-orange #d29922 */
+.datetime-orange:focus::-webkit-calendar-picker-indicator {
+  filter: brightness(0) saturate(100%) invert(63%) sepia(95%) saturate(436%) hue-rotate(5deg) brightness(98%) contrast(86%);
 }
 
 ::-webkit-scrollbar { width: 8px; }
