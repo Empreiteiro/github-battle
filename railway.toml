@@ -1,0 +1,17 @@
+# Railway configuration for GitHub Battle.
+#
+# One container: the Vite bundle in dist/ served as static files, plus the
+# handlers in netlify/functions mounted at /api/* by server/index.ts.
+# Persistence is PostgreSQL — set DATABASE_URL to the Postgres service.
+#
+# Ref: https://docs.railway.com/reference/config-as-code
+
+[build]
+builder = "RAILPACK"
+buildCommand = "npm run build && npm run build:server"
+
+[deploy]
+# $PORT is injected by Railway; server/index.ts reads it.
+startCommand = "node dist-server/server/index.js"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3

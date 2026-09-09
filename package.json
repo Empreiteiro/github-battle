@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:server": "tsc -p tsconfig.server.json",
+    "start": "node dist-server/server/index.js",
+    "typecheck:server": "tsc --noEmit --strict --skipLibCheck --module nodenext --moduleResolution nodenext --target es2023 --types node server/index.ts server/blobs.ts server/og.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
@@ -15,15 +18,16 @@
     "@capacitor/browser": "^8.0.3",
     "@capacitor/cli": "^8.3.0",
     "@capacitor/core": "^8.3.0",
+    "pg": "^8.13.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@netlify/blobs": "^10.7.4",
     "@netlify/functions": "^5.1.5",
     "@tailwindcss/vite": "^4.2.2",
     "@types/node": "^24.12.0",
+    "@types/pg": "^8.11.10",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/uuid": "^10.0.0",
