@@ -195,11 +195,37 @@ function externalOrigin(req: IncomingMessage): string {
   return `${scheme}://${req.headers.host ?? `localhost:${PORT}`}`;
 }
 
+/**
+ * Netlify answered www.gitbattle.pro with a 301 to the apex. Railway serves
+ * every custom domain attached to a service without redirecting between them,
+ * so both hostnames would answer 200 and the site would exist twice. The
+ * canonicalisation has to happen here.
+ *
+ * Only a host that literally starts with "www." is redirected, which leaves
+ * the *.up.railway.app hostname and localhost alone.
+ */
+function apexRedirect(url: URL): Response | null {
+  if (!url.host.startsWith("www.")) return null;
+
+  const target = new URL(url);
+  target.host = url.host.slice("www.".length);
+  return new Response(null, {
+    status: 301,
+    headers: { location: target.href, "cache-control": "public, max-age=0, must-revalidate" },
+  });
+}
+
 const server = createServer(async (req, res) => {
   const origin = externalOrigin(req);
   const url = new URL(req.url ?? "/", origin);
 
   try {
+    const canonical = apexRedirect(url);
+    if (canonical) {
+      await sendWebResponse(res, canonical);
+      return;
+    }
+
     // /api/* -> netlify/functions/*
     if (url.pathname.startsWith("/api/")) {
       const name = url.pathname.slice("/api/".length).replace(/\/+$/, "");
