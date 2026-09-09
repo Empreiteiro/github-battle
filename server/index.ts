@@ -182,8 +182,21 @@ async function tryBattleOg(req: IncomingMessage, url: URL): Promise<Response | n
   }
 }
 
+/**
+ * The origin as the client sees it. Railway terminates TLS and forwards over
+ * plain HTTP, so the scheme has to come from x-forwarded-proto — otherwise the
+ * absolute URLs built from it (og:url, og:image) go out as http:// and
+ * crawlers reject or downgrade them.
+ */
+function externalOrigin(req: IncomingMessage): string {
+  const forwarded = req.headers["x-forwarded-proto"];
+  const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim();
+  const scheme = first === "https" || first === "http" ? first : "http";
+  return `${scheme}://${req.headers.host ?? `localhost:${PORT}`}`;
+}
+
 const server = createServer(async (req, res) => {
-  const origin = `http://${req.headers.host ?? `localhost:${PORT}`}`;
+  const origin = externalOrigin(req);
   const url = new URL(req.url ?? "/", origin);
 
   try {
