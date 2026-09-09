@@ -1,4 +1,5 @@
 import type { Context } from '@netlify/functions';
+import type { GitHubUser } from './api-types.js';
 import { getBattle, saveBattle, sanitizeBattle } from './store.js';
 
 export default async function handler(request: Request, _context: Context) {
@@ -7,7 +8,11 @@ export default async function handler(request: Request, _context: Context) {
   }
 
   try {
-    const { id, username, password } = await request.json();
+    const { id, username, password } = (await request.json()) as {
+      id?: string;
+      username?: string;
+      password?: string;
+    };
 
     if (!id || !username) {
       return new Response(JSON.stringify({ error: 'Missing id or username' }), { status: 400 });
@@ -36,8 +41,8 @@ export default async function handler(request: Request, _context: Context) {
         headers: { Accept: 'application/vnd.github.v3+json' },
       });
       if (res.ok) {
-        const data = await res.json();
-        avatarUrl = data.avatar_url;
+        const data = (await res.json()) as GitHubUser;
+        if (data.avatar_url) avatarUrl = data.avatar_url;
       }
     } catch { /* use fallback */ }
 

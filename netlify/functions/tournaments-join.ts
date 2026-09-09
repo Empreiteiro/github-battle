@@ -1,4 +1,5 @@
 import type { Context } from '@netlify/functions';
+import type { GitHubUser } from './api-types.js';
 import { getTournament, saveTournament } from './tournament-store.js';
 
 export default async function handler(request: Request, _context: Context) {
@@ -7,7 +8,7 @@ export default async function handler(request: Request, _context: Context) {
   }
 
   try {
-    const { id, username } = await request.json();
+    const { id, username } = (await request.json()) as { id?: string; username?: string };
     if (!id || !username) {
       return new Response(JSON.stringify({ error: 'Missing id or username' }), { status: 400 });
     }
@@ -31,8 +32,8 @@ export default async function handler(request: Request, _context: Context) {
     try {
       const res = await fetch(`https://api.github.com/users/${username}`);
       if (res.ok) {
-        const d = await res.json();
-        avatarUrl = d.avatar_url;
+        const d = (await res.json()) as GitHubUser;
+        if (d.avatar_url) avatarUrl = d.avatar_url;
       }
     } catch { /* fallback */ }
 

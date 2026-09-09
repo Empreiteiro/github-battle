@@ -7,7 +7,7 @@ export default async function handler(request: Request, _context: Context) {
   }
 
   try {
-    const { id, username } = await request.json();
+    const { id, username } = (await request.json()) as { id?: string; username?: string };
 
     if (!id || !username) {
       return new Response(JSON.stringify({ error: 'Missing id or username' }), { status: 400 });

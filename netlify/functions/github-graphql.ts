@@ -1,4 +1,6 @@
 // GitHub GraphQL API client for fetching contribution data
+
+import type { GitHubEvent, GitHubGraphQLResponse } from './api-types.js';
 // Uses GITHUB_TOKEN env var for authenticated requests
 // contributionCalendar.totalContributions includes private repo activity
 // visible on the user's profile (restricted contributions)
@@ -80,7 +82,7 @@ export async function fetchStatsGraphQL(
       return fetchStatsREST(username, since, repos);
     }
 
-    const json = await res.json();
+    const json = (await res.json()) as GitHubGraphQLResponse;
 
     if (json.errors || !json.data?.user) {
       console.error('GraphQL errors:', json.errors);
@@ -145,7 +147,7 @@ async function fetchCommentsAndMergedPRs(
         },
       );
       if (!res.ok) break;
-      const events = await res.json();
+      const events = (await res.json()) as GitHubEvent[];
       if (events.length === 0) break;
 
       for (const event of events) {
@@ -205,7 +207,7 @@ async function fetchStatsREST(
         { headers },
       );
       if (!res.ok) break;
-      const events = await res.json();
+      const events = (await res.json()) as GitHubEvent[];
       if (events.length === 0) break;
 
       for (const event of events) {

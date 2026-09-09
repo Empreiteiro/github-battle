@@ -1,4 +1,5 @@
 import type { Context } from '@netlify/functions';
+import type { GitHubUser } from './api-types.js';
 import { saveTournament } from './tournament-store.js';
 import type { StoredTournament } from './tournament-store.js';
 
@@ -12,7 +13,18 @@ export default async function handler(request: Request, _context: Context) {
   }
 
   try {
-    const { name, size, roundDuration, scoringMode, scoring, repos, participants } = await request.json();
+    // Everything optional: the checks below are what actually decides whether
+    // a request is usable, and they stay the source of truth.
+    const { name, size, roundDuration, scoringMode, scoring, repos, participants } =
+      (await request.json()) as {
+        name?: string;
+        size?: StoredTournament['size'];
+        roundDuration?: string;
+        scoringMode?: string;
+        scoring?: StoredTournament['scoring'];
+        repos?: string[];
+        participants?: unknown;
+      };
     const mode: 'window' | 'sprint' = scoringMode === 'sprint' ? 'sprint' : 'window';
 
     if (!name || !size || !roundDuration) {
@@ -49,8 +61,8 @@ export default async function handler(request: Request, _context: Context) {
         try {
           const res = await fetch(`https://api.github.com/users/${username.trim()}`);
           if (res.ok) {
-            const d = await res.json();
-            avatars[username.trim()] = d.avatar_url;
+            const d = (await res.json()) as GitHubUser;
+            avatars[username.trim()] = d.avatar_url ?? `https://github.com/${username.trim()}.png`;
           } else {
             avatars[username.trim()] = `https://github.com/${username.trim()}.png`;
           }
