@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "build:server": "tsc -p tsconfig.server.json",
     "start": "node dist-server/server/index.js",
-    "typecheck:server": "tsc --noEmit --strict --skipLibCheck --module nodenext --moduleResolution nodenext --target es2023 --types node server/index.ts server/blobs.ts server/og.ts"
+    "typecheck:server": "tsc --noEmit --strict --skipLibCheck --module nodenext --moduleResolution nodenext --target es2023 --types node server/index.ts server/blobs.ts server/og.ts scripts/blobs-transfer.ts",
+    "blobs-transfer": "node dist-server/scripts/blobs-transfer.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
