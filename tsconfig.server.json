@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "types": ["node"],
+    "skipLibCheck": true,
+    "outDir": "./dist-server",
+    "rootDir": ".",
+    "sourceMap": true,
+
+    /* Transpile only, which is what the functions get today: they were never
+       part of tsconfig.app.json or tsconfig.node.json, and Netlify bundles them
+       with esbuild, which does not type-check either. Turning checking on here
+       surfaces 45 pre-existing errors (mostly `request.json()` being `unknown`)
+       that are a separate cleanup. The code under server/ does type-check
+       strictly — see the `typecheck:server` script. */
+    "noCheck": true,
+
+    "strict": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["server/**/*.ts", "netlify/functions/**/*.ts"]
+}

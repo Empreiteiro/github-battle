@@ -1,4 +1,4 @@
-import { getStore } from '@netlify/blobs';
+import { getStore } from '../../server/blobs.js';
 
 export interface StoredTournament {
   id: string;
