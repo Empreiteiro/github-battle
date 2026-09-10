@@ -8,7 +8,7 @@ export default async function handler(request: Request, _context: Context) {
   }
 
   try {
-    const { id, createdBy } = await request.json();
+    const { id, createdBy } = (await request.json()) as { id?: string; createdBy?: string };
 
     if (!id) {
       return new Response(JSON.stringify({ error: 'Missing battle id' }), { status: 400 });

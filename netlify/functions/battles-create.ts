@@ -1,4 +1,5 @@
 import type { Context } from '@netlify/functions';
+import type { GitHubUser } from './api-types.js';
 import { saveBattle, sanitizeBattle } from './store.js';
 import type { StoredBattle } from './store.js';
 
@@ -25,8 +26,8 @@ async function fetchAvatar(username: string): Promise<string> {
       headers: { Accept: 'application/vnd.github.v3+json' },
     });
     if (!res.ok) return `https://github.com/${username}.png`;
-    const data = await res.json();
-    return data.avatar_url;
+    const data = (await res.json()) as GitHubUser;
+    return data.avatar_url ?? `https://github.com/${username}.png`;
   } catch {
     return `https://github.com/${username}.png`;
   }
@@ -38,7 +39,22 @@ export default async function handler(request: Request, _context: Context) {
   }
 
   try {
-    const body = await request.json();
+    // Everything optional: the checks below are what actually decides whether
+    // a request is usable, and they stay the source of truth.
+    const body = (await request.json()) as {
+      name?: string;
+      password?: string | null;
+      interval?: string;
+      scoringMode?: string;
+      participants?: string[];
+      maxParticipants?: number;
+      customStart?: string;
+      customEnd?: string;
+      scoring?: StoredBattle['scoring'];
+      repos?: string[];
+      createdBy?: string;
+      teams?: unknown;
+    };
     const { name, password, interval, scoringMode, participants, maxParticipants, customStart, customEnd, scoring, repos, createdBy, teams } = body;
 
     if (!name || !interval || !participants || !Array.isArray(participants) || participants.length < 1) {

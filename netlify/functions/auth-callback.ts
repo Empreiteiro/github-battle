@@ -1,4 +1,5 @@
 import type { Context } from '@netlify/functions';
+import type { GitHubOAuthTokenResponse } from './api-types.js';
 
 // GitHub OAuth callback — exchanges code for access token, then redirects
 // back to the app with the token as a query param.
@@ -36,7 +37,7 @@ export default async function handler(request: Request, _context: Context) {
       return new Response('Failed to exchange code', { status: 500 });
     }
 
-    const tokenData = await tokenRes.json();
+    const tokenData = (await tokenRes.json()) as GitHubOAuthTokenResponse;
     const accessToken = tokenData.access_token;
 
     if (!accessToken) {

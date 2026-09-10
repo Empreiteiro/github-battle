@@ -2,6 +2,8 @@
 // Calls GitHub API to get the real username from an OAuth token.
 // Never trust the client-provided username — always verify.
 
+import type { GitHubAuthenticatedUser } from './api-types.js';
+
 export async function verifyGitHubToken(authHeader: string | null): Promise<string | null> {
   if (!authHeader) return null;
 
@@ -13,7 +15,7 @@ export async function verifyGitHubToken(authHeader: string | null): Promise<stri
       headers: { Authorization: `token ${token}` },
     });
     if (!res.ok) return null;
-    const data = await res.json();
+    const data = (await res.json()) as GitHubAuthenticatedUser;
     return data.login || null;
   } catch {
     return null;
