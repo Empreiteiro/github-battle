@@ -8,7 +8,10 @@
 
 [build]
 builder = "RAILPACK"
-buildCommand = "npm run build && npm run build:server"
+# `npm run build` already runs `build:server`. Railpack uses that script when
+# this file is not applied, so the server emit has to live there. Do not append
+# `build:server` here — a build that does honor this file would compile it twice.
+buildCommand = "npm run build"
 
 [deploy]
 # $PORT is injected by Railway; server/index.ts reads it.
